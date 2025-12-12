@@ -73,9 +73,18 @@ app.add_middleware(
 app.include_router(api, prefix=settings.ROOT_PATH)
 
 
-@app.websocket("/ws")
+@app.websocket("/notification")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+@app.websocket("/log/{task_id}")
+async def websocket_endpoint(websocket: WebSocket, task_id: str):
+    await manager.connect(websocket,task_id)
     try:
         while True:
             await websocket.receive_text()

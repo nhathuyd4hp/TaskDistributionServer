@@ -1,3 +1,4 @@
+import redis
 import io
 import re
 import tempfile
@@ -12,8 +13,9 @@ from src.robot.GuiBanVeToei.automation import MailDealer, SharePoint, WebAccess
 from src.service import ResultService as minio
 
 
-@shared_task
+@shared_task(bind=True)
 def gui_ban_ve_toei(
+    self,
     from_date: datetime,
     to_date: datetime,
 ):
@@ -52,6 +54,8 @@ def gui_ban_ve_toei(
     https://www.nsk-cad.com/
     ***************************************
     """
+    redisClient = redis.Redis(connection_pool=REDIS_POOL)
+    Channel = self.request.id 
     with tempfile.TemporaryDirectory() as temp_dir:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=False, args=["--start-maximized"])
@@ -135,3 +139,4 @@ def gui_ban_ve_toei(
                     content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
                 return result.object_name
+    logger.info(f"[{task_id}] hoàn thành")

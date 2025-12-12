@@ -1,15 +1,9 @@
-from enum import Enum
-
 import redis
 from src.core.config import settings
 
-
-class Channel(str, Enum):
-    RELOAD = "RELOAD"
-
-
-redisClient = redis.Redis(
+REDIS_POOL = redis.ConnectionPool(
     host=settings.REDIS_HOST,
-    port=settings.REDIS_HOST,
+    port=settings.REDIS_PORT,
     db=settings.REDIS_DB,
+    max_connections=10,
 )
