@@ -2,8 +2,9 @@ import redis
 import io
 import re
 import tempfile
+from src.core.redis import REDIS_POOL
 from datetime import datetime
-
+from src.core.logger import Log
 import pandas as pd
 from celery import shared_task
 from playwright.sync_api import sync_playwright
@@ -19,6 +20,11 @@ def gui_ban_ve_toei(
     from_date: datetime,
     to_date: datetime,
 ):
+    TaskID = self.request.id
+    logger = Log.get_logger(
+        channel=TaskID,
+        redis_client=redis.Redis(connection_pool=REDIS_POOL)
+    )
     """
     Robot Name: Gửi bản vẽ Toei
     1. Download Data
@@ -54,8 +60,7 @@ def gui_ban_ve_toei(
     https://www.nsk-cad.com/
     ***************************************
     """
-    redisClient = redis.Redis(connection_pool=REDIS_POOL)
-    Channel = self.request.id 
+    logger.info(f"Chạy với tham số: {from_date} - {to_date}")
     with tempfile.TemporaryDirectory() as temp_dir:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=False, args=["--start-maximized"])
@@ -84,6 +89,7 @@ def gui_ban_ve_toei(
                     context=context,
                 ) as md,
             ):
+                logger.info("Tải dữ liệu từ WebAccess")
                 data = wa.download_data(
                     from_date=datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y/%m/%d"),
                     to_date=datetime.strptime(to_date, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y/%m/%d"),
@@ -114,6 +120,7 @@ def gui_ban_ve_toei(
                     if len(downloads) != 1:
                         data.at[index, "Result"] = f"Có {len(downloads)} file bản vẽ"
                         continue
+                    logger.info("Gửi mail")
                     if not md.send_mail(
                         to=mail_address,
                         subject=f"東栄住宅 {row['物件名']} 軽天割付図送付",
@@ -126,7 +133,7 @@ def gui_ban_ve_toei(
                         data.at[index, "Result"] = "Đã gửi mail | Cập nhật WebAccess lỗi"
                         continue
                     data.at[index, "Result"] = "Thành công"
-
+                logger.info("Lưu file kết quả")
                 # Upload to S3
                 excel_buffer = io.BytesIO()
                 data.to_excel(excel_buffer, index=False, engine="xlsxwriter")
@@ -139,4 +146,4 @@ def gui_ban_ve_toei(
                     content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
                 return result.object_name
-    logger.info(f"[{task_id}] hoàn thành")
+    logger.info("Hoàn thành")

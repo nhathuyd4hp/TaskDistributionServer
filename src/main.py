@@ -7,7 +7,7 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, WebSocket,
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlmodel import Session
-
+from src.core.redis import Async_Redis_POOL
 from src.api.common.response import SuccessResponse
 from src.api.middleware import GlobalExceptionMiddleware
 from src.api.router import api
@@ -18,17 +18,17 @@ from src.socket import manager
 from src.worker import Worker
 
 
-async def subscriber():
-    r = redis.Redis(host="192.168.0.146", port=6379, db=0)
+async def subscriber(channel:str):
+    r = redis.Redis(connection_pool=Async_Redis_POOL)
     p = r.pubsub()
-    await p.subscribe("CELERY")
+    await p.subscribe(channel)
     async for message in p.listen():
         await manager.broadcast(message["data"])
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    task = asyncio.create_task(subscriber())
+    asyncio.create_task(subscriber("CELERY"))
+    asyncio.create_task(subscriber("LOG"))
     # --- Scheduler --- #
     with Session(settings.db_engine) as session:
         schedules = ScheduleService(session).findMany()
@@ -52,7 +52,6 @@ async def lifespan(app: FastAPI):
     if not ResultService.bucket_exists(settings.MINIO_BUCKET):
         ResultService.make_bucket(settings.MINIO_BUCKET)
     yield
-    task.cancel()
     scheduler.shutdown()
 
 
