@@ -81,9 +81,9 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
-@app.websocket("/log/{task_id}")
-async def websocket_endpoint(websocket: WebSocket, task_id: str):
-    await manager.connect(websocket,task_id)
+@app.websocket("/channel/{channel}")
+async def websocket_endpoint(websocket: WebSocket, channel: str):
+    await manager.connect(websocket,channel)
     try:
         while True:
             await websocket.receive_text()
