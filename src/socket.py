@@ -32,7 +32,9 @@ class ConnectionManager:
             channel = self.app_channel
         for connection in self.active_connections.get(channel, []):
             with suppress(Exception):
-                await connection.send_text(message)
+                await connection.send_text(str(message))
+                await connection.send_bytes()
+                await connection.send_json()
 
 
 manager = ConnectionManager()

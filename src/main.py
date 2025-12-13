@@ -19,18 +19,21 @@ from src.socket import manager
 from src.worker import Worker
 
 
-async def subscriber(channel: str):
+async def subscriber(*args):
     r = redis.Redis(connection_pool=Async_Redis_POOL)
     p = r.pubsub()
-    await p.subscribe(channel)
+    await p.subscribe(*args)
     async for message in p.listen():
-        await manager.broadcast(message["data"], channel)
+        if message["type"] != 'message':
+            continue
+        channel: str = message['channel'].decode("utf-8")
+        data = message['data']
+        await manager.broadcast(str(data), channel)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    asyncio.create_task(subscriber("CELERY"))
-    asyncio.create_task(subscriber("LOG"))
+    asyncio.create_task(subscriber("CELERY","LOG"))
     # --- Scheduler --- #
     with Session(settings.db_engine) as session:
         schedules = ScheduleService(session).findMany()

@@ -101,9 +101,9 @@ def gui_ban_ve_toei(
                         continue
                     # Kiểm tra địa chỉ gửi
                     mail_address = wa.mail_address(str(row["案件番号"]))
-                    # if mail_address is None:
-                    #     data.at[index, 'Result'] = "Không tìm thấy mail nhận"
-                    #     continue
+                    if mail_address is None:
+                        data.at[index, 'Result'] = "Không tìm thấy mail nhận"
+                        continue
                     downloads = sp.download(
                         url=row["資料リンク"],
                         steps=[
