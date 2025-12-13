@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from sqlmodel import Column, Field, Text
+from sqlmodel import Column, Field, Relationship, Text
 
 from src.model.base import Base
 
@@ -17,3 +17,5 @@ class Runs(Base, table=True):
     parameters: str | None = Field(default=None)
     status: Status = Field(default=Status.PENDING)
     result: str | None = Field(sa_column=Column(Text))
+
+    logs: list["Log"] = Relationship(back_populates="run")

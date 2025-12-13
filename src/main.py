@@ -1,22 +1,67 @@
 import asyncio
+import json
+import time
 from contextlib import asynccontextmanager, suppress
+from datetime import datetime
 
+import redis.asyncio as redis
 from apscheduler.triggers.cron import CronTrigger
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlmodel import Session
 
-import redis.asyncio as redis
 from src.api.common.response import SuccessResponse
 from src.api.middleware import GlobalExceptionMiddleware
 from src.api.router import api
 from src.core.config import settings
 from src.core.redis import Async_Redis_POOL
+from src.model import Log
 from src.scheduler import scheduler
 from src.service import ResultService, ScheduleService
 from src.socket import manager
 from src.worker import Worker
+
+LOG_QUEUE: asyncio.Queue[str] = asyncio.Queue(maxsize=10000)
+
+
+async def save_logs(logs: list[dict]) -> None:
+    if not logs:
+        return
+    #
+    with Session(settings.db_engine) as session:
+        for log in logs:
+            session.add(
+                Log(
+                    run_id=log.get("run_id"),
+                    timestamp=log.get("timestamp"),
+                    level=log.get("level"),
+                    message=log.get("message"),
+                )
+            )
+        session.commit()
+
+
+async def log_collector(
+    batch_size: int = 100,
+    flush_interval: int = 5,
+):
+    batch: list[dict] = []
+    last_flush = time.monotonic()
+    while True:
+        try:
+            log = await asyncio.wait_for(
+                LOG_QUEUE.get(),
+                timeout=flush_interval,
+            )
+            batch.append(log)
+        except asyncio.TimeoutError:
+            pass
+        #
+        if len(batch) >= batch_size or (batch and time.monotonic() - last_flush >= flush_interval):
+            await save_logs(batch)
+            batch.clear()
+            last_flush = time.monotonic()
 
 
 async def subscriber(*args):
@@ -24,23 +69,37 @@ async def subscriber(*args):
     p = r.pubsub()
     await p.subscribe(*args)
     async for message in p.listen():
-        if message["type"] != 'message':
+        if message["type"] != "message":
             continue
-        channel: str = message['channel'].decode("utf-8")
-        raw = message['data']
+        channel: str = message["channel"].decode("utf-8")
+        raw = message["data"]
         if isinstance(raw, bytes):
             data = raw.decode("utf-8")
         else:
             data = str(raw)
         if channel == "CELERY":
             await manager.broadcast(data)
-        else:
-            await manager.broadcast(data,channel)
+            continue
+        if channel == "LOG":
+            data = json.loads(data)
+            task_id = data.get("task_id")
+            raw_message = data.get("message")
+            timestamp, level, _, message = raw_message.split(" | ")
+            await LOG_QUEUE.put(
+                {
+                    "run_id": task_id,
+                    "timestamp": datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S,%f"),
+                    "level": level,
+                    "message": message.strip(),
+                }
+            )
+        await manager.broadcast(data, channel)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    asyncio.create_task(subscriber("CELERY","LOG"))
+    asyncio.create_task(log_collector())
+    asyncio.create_task(subscriber("CELERY", "LOG"))
     # --- Scheduler --- #
     with Session(settings.db_engine) as session:
         schedules = ScheduleService(session).findMany()
