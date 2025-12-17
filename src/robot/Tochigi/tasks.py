@@ -155,7 +155,7 @@ def MicrosoftExcel():
 
 
 @shared_task(bind=True)
-def old_tochigi(self, process_date: datetime | str):
+def tochigi(self, process_date: datetime | str):
     if isinstance(process_date, str):
         process_date = datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").date()
     # ----- #
@@ -601,7 +601,7 @@ def old_tochigi(self, process_date: datetime | str):
                                     api.upload_item(
                                         site_id=Mouka.get("id"),
                                         local_path=os.path.join(pdf_dir, f),
-                                        breadcrumb=f"真岡工場　製造データ/{納品日}/{Title}/割付図",
+                                        breadcrumb=f"真岡工場　製造データ/{納品日}/栃木工場確定データ",
                                     )
                                 )
                             for f in os.listdir(excel_dir):
@@ -609,7 +609,7 @@ def old_tochigi(self, process_date: datetime | str):
                                     api.upload_item(
                                         site_id=Mouka.get("id"),
                                         local_path=os.path.join(excel_dir, f),
-                                        breadcrumb=f"真岡工場　製造データ/{納品日}/{Title}",
+                                        breadcrumb=f"真岡工場　製造データ/{納品日}/栃木工場確定データ",
                                     )
                                 )
                             if all("error" not in item for item in up):
