@@ -1,25 +1,29 @@
-from contextlib import suppress
-from openpyxl.utils import get_column_letter
-import shutil
-import pandas as pd
+import os
 import re
-from pywinauto import Desktop
+import shutil
+import tempfile
 import threading
+import time
+from contextlib import suppress
+from datetime import datetime
+
+import pandas as pd
+import redis
+import xlwings as xw
+from celery import shared_task
+from filelock import FileLock
+from openpyxl.utils import get_column_letter
+from playwright.sync_api import sync_playwright
+from pywinauto import Desktop
 from pywinauto.application import Application, WindowSpecification
 from pywinauto.keyboard import send_keys
-import time
-import os
-import tempfile
-import redis
+
 from src.core.config import settings
-from playwright.sync_api import sync_playwright
-from src.robot.Tochigi.api import APISharePoint
-from src.core.redis import REDIS_POOL
-from datetime import datetime
 from src.core.logger import Log
-import xlwings as xw
-from src.robot.Tochigi.automation import PowerApp,SharePoint
-from celery import shared_task
+from src.core.redis import REDIS_POOL
+from src.robot.Tochigi.api import APISharePoint
+from src.robot.Tochigi.automation import PowerApp, SharePoint
+
 
 def clean_value(v):
     import math
@@ -29,6 +33,7 @@ def clean_value(v):
     if isinstance(v, float) and math.isnan(v):
         return None
     return v
+
 
 def 確認():
     while True:
@@ -148,11 +153,12 @@ def MicrosoftExcel():
         else:
             break
 
+
 @shared_task(bind=True)
-def old_tochigi(self,process_date: datetime | str):
+def old_tochigi(self, process_date: datetime | str):
     if isinstance(process_date, str):
         process_date = datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").date()
-    # ----- # 
+    # ----- #
     TaskID = self.request.id
     logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     logger.info(f"Upload Tochigi: {process_date}")
@@ -179,11 +185,10 @@ def old_tochigi(self,process_date: datetime | str):
                 browser=browser,
                 context=context,
             ) as pa,
-            tempfile.TemporaryDirectory(
-            ) as temp_dir
+            tempfile.TemporaryDirectory() as temp_dir,
         ):
-            year, month, day = str(process_date).split("-") # '2026/01/01'
-            DataTochigi = os.path.join(temp_dir,f"DataTochigi{process_date}.xlsx")
+            year, month, day = str(process_date).split("-")  # '2026/01/01'
+            DataTochigi = os.path.join(temp_dir, f"DataTochigi{process_date}.xlsx")
             api = APISharePoint(
                 TENANT_ID=settings.API_SHAREPOINT_TENANT_ID,
                 CLIENT_ID=settings.API_SHAREPOINT_CLIENT_ID,
@@ -198,13 +203,13 @@ def old_tochigi(self,process_date: datetime | str):
             Uploaded = api.download_item(
                 site_id=UP.get("id"),
                 breadcrumb=f"データUP一覧/{os.path.basename(DataTochigi)}",
-                save_to=os.path.join(temp_dir,f"DataTochigi{process_date}.xlsx"),
+                save_to=os.path.join(temp_dir, f"DataTochigi{process_date}.xlsx"),
             )
 
             if Uploaded:
                 DataTochigi_Upload = api.upload_item(
                     site_id=UP.get("id"),
-                    local_path=os.path.join(temp_dir,f"DataTochigi{process_date}.xlsx"),
+                    local_path=os.path.join(temp_dir, f"DataTochigi{process_date}.xlsx"),
                     breadcrumb="データUP一覧",
                 )
                 DataTochigi_ItemID = DataTochigi_Upload.get("id")
@@ -218,7 +223,9 @@ def old_tochigi(self,process_date: datetime | str):
                 )
                 if "error" in metadata:
                     logger.error(metadata.get("error"))
-                    raise FileNotFoundError(f"Không tồn tại: 'Documents/真岡工場　製造データ/{int(month)}月{int(day)}日'")
+                    raise FileNotFoundError(
+                        f"Không tồn tại: 'Documents/真岡工場　製造データ/{int(month)}月{int(day)}日'"
+                    )
 
                 items = api.get_item_from_another_item(
                     site_id=site.get("id"),
@@ -233,9 +240,9 @@ def old_tochigi(self,process_date: datetime | str):
                         if api.download_item(
                             site_id=site.get("id"),
                             breadcrumb=f"真岡工場　製造データ/{int(month)}月{int(day)}日/{i.get("name")}",
-                            save_to=os.path.join(temp_dir,i.get("name")),
+                            save_to=os.path.join(temp_dir, i.get("name")),
                         ):
-                            item.append(os.path.join(temp_dir,i.get("name")))
+                            item.append(os.path.join(temp_dir, i.get("name")))
                 for i in item[:]:
                     file: str = os.path.basename(i)
                     pattern = rf"^配車{year}年{int(month)}月{int(day)}日【小山】.*\.xls$"
@@ -335,7 +342,7 @@ def old_tochigi(self,process_date: datetime | str):
                         send_keys("%{F4}")
                         time.sleep(1)
                         break
-                    except Exception as e:
+                    except Exception:
                         if app:
                             app.kill()
                 data = pd.read_excel(
@@ -364,7 +371,7 @@ def old_tochigi(self,process_date: datetime | str):
                 DataTochigi_ItemID = DataTochigi_Upload.get("id")
                 DataTochigi_DriveID = DataTochigi_Upload.get("parentReference").get("driveId")
                 DataTochigi_SiteID = DataTochigi_Upload.get("parentReference").get("siteId")
-            
+
             # Dán 1 lần
             while True:
                 api.download_item(
@@ -501,12 +508,12 @@ def old_tochigi(self,process_date: datetime | str):
                                 drive_id = drive.get("id")
                                 break
                         path = f"{"/".join(breadcrumb[1:])}/★データ"
-                        if os.path.exists(os.path.join(temp_dir,f"downloads/{案件名}")):
-                            shutil.rmtree(os.path.join(temp_dir,f"downloads/{案件名}"))
+                        if os.path.exists(os.path.join(temp_dir, f"downloads/{案件名}")):
+                            shutil.rmtree(os.path.join(temp_dir, f"downloads/{案件名}"))
                         downloads = api.download_drive(
                             drive_id=drive_id,
                             breadcrumb=path,
-                            save_to=os.path.join(temp_dir,案件名),
+                            save_to=os.path.join(temp_dir, 案件名),
                         )
                         counts: list[str] = [filepath for _, filepath, _ in downloads]
                         floors: int = 2 if Floors == "-" else len(Floors.split(","))
@@ -526,8 +533,9 @@ def old_tochigi(self,process_date: datetime | str):
                                     action_up = False
                                     break
                                 time.sleep(0.5)
-                        pdf_dir = os.path.join(temp_dir,案件名,"pdf")
-                        excel_dir = os.path.join(temp_dir,案件名,"excel")
+                            break
+                        pdf_dir = os.path.join(temp_dir, 案件名, "pdf")
+                        excel_dir = os.path.join(temp_dir, 案件名, "excel")
                         os.makedirs(name=pdf_dir, exist_ok=True)
                         os.makedirs(name=excel_dir, exist_ok=True)
 
@@ -543,34 +551,34 @@ def old_tochigi(self,process_date: datetime | str):
                                 new_path = os.path.join(excel_dir, filename)
                                 shutil.move(filepath, new_path)
                                 temp.append(new_path)
-
-                        app = xw.App(visible=False)
-                        try:
-                            wb_macro = app.books.open(macro_file)
-                            # Fname
-                            for win in Desktop(backend="win32").windows():
-                                if win.window_text() == "Browse":
-                                    with suppress(Exception):
-                                        app = Application(backend="win32").connect(handle=win.handle)
-                                        dialog = app.window(handle=win.handle)
-                                        dialog.close()
-                            threading.Thread(target=Fname, args=(excel_dir,)).start()
-                            wb_macro.macro("Fname")()
-                            # Fopen
-                            wb_macro.macro("Fopen")()
-                            wb_macro.save()
-                            wb_macro.close()
-                        finally:
-                            app.quit()
-                        macro_data = pd.read_excel(
-                            io=macro_file,
-                            sheet_name="メインメニュー",
-                            header=None,
-                        )
+                        with FileLock("macro_tochigi.lock", timeout=300):
+                            try:
+                                app = xw.App(visible=False)
+                                wb_macro = app.books.open(macro_file)
+                                # Fname
+                                for win in Desktop(backend="win32").windows():
+                                    if win.window_text() == "Browse":
+                                        with suppress(Exception):
+                                            app = Application(backend="win32").connect(handle=win.handle)
+                                            dialog = app.window(handle=win.handle)
+                                            dialog.close()
+                                threading.Thread(target=Fname, args=(excel_dir,)).start()
+                                wb_macro.macro("Fname")()
+                                # Fopen
+                                wb_macro.macro("Fopen")()
+                                wb_macro.save()
+                                wb_macro.close()
+                            finally:
+                                app.quit()
+                            macro_data = pd.read_excel(
+                                io=macro_file,
+                                sheet_name="メインメニュー",
+                                header=None,
+                            )
                         macro_data.index = macro_data.index + 1
                         macro_data.columns = [get_column_letter(i + 1) for i in range(macro_data.shape[1])]
                         result = set(macro_data["G"][2:])
-                        result = {x for x in result if pd.notna(x)}                        
+                        result = {x for x in result if pd.notna(x)}
                         if result != {"OK"}:
                             while True:
                                 if api.write(
@@ -583,6 +591,7 @@ def old_tochigi(self,process_date: datetime | str):
                                     action_up = False
                                     break
                                 time.sleep(0.5)
+                            break
                         # Upload
                         downloads: list[str] = temp
                         while True:
@@ -615,7 +624,7 @@ def old_tochigi(self,process_date: datetime | str):
                                         break
                                     time.sleep(0.5)
                                 break
-                        
+
                         suffix = f"{month}-{day}納材"
                         sp.rename_breadcrumb(
                             URL,
@@ -624,9 +633,9 @@ def old_tochigi(self,process_date: datetime | str):
                         break
                     if action_up:
                         if pa.up(
-                            process_date==納品日,
+                            process_date=納品日,
                             factory=工場,
-                            project=案件名,
+                            build=案件名,
                         ):
                             while True:
                                 if api.write(
@@ -639,12 +648,5 @@ def old_tochigi(self,process_date: datetime | str):
                                     break
                                 time.sleep(0.5)
                     break
-            
+
             time.sleep(2.5)
-
-                    
-                        
-
-
-
-                    

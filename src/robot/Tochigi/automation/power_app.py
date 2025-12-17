@@ -38,7 +38,7 @@ class PowerApp:
             try:
                 self.page.frame_locator("iframe[class='player-app-frame']").locator(
                     "button", has_text="Login"
-                ).wait_for(timeout=10000, state="detached")
+                ).wait_for(timeout=15000, state="detached")
                 return True
             except TimeoutError as e:
                 raise PermissionError("PowerApp - PermissionError") from e
