@@ -240,7 +240,7 @@ def tochigi(self, process_date: datetime | str):
                 if data["R_Status"].notna().all():
                     break
                 for upload_file_index, row in data.iterrows():
-                    if pd.notna(row["Note"]):
+                    if pd.notna(row["R_Status"]):
                         continue
                     # ---- Đánh dấu bot đang xử lí dòng/bài này ----
                     while True:
