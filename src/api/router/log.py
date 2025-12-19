@@ -1,12 +1,14 @@
 import asyncio
 import os
+
 import aiofiles
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 router = APIRouter(prefix="/logs", tags=["Log"])
 
-async def streaming(run_id:str): 
+
+async def streaming(run_id: str):
     file_path = f"logs/{run_id}.log"
     if not os.path.exists(file_path):
         yield "data: Log file not found.\n"
@@ -16,13 +18,11 @@ async def streaming(run_id:str):
             # Đọc từng dòng
             line = await f.readline()
             if line:
-                yield f"data: {line}\n"
+                yield f"{line}\n"
             else:
                 await asyncio.sleep(2.5)
 
+
 @router.get("/{run_id}")
 async def log_realtime(run_id: str):
-    return StreamingResponse(
-        streaming(run_id),
-        media_type="text/event-stream"
-    )
+    return StreamingResponse(streaming(run_id), media_type="text/event-stream")

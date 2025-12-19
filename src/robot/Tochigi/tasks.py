@@ -178,7 +178,7 @@ def tochigi(self, process_date: datetime | str):
             ) as sp,
             tempfile.TemporaryDirectory() as temp_dir,
         ):
-            year, month, day = str(process_date).split("-")  # '2026/01/01'
+            _, month, day = str(process_date).split("-")
             DataTochigi = os.path.join(temp_dir, f"DataTochigi{process_date}.xlsx")
             api = APISharePoint(
                 TENANT_ID=settings.API_SHAREPOINT_TENANT_ID,
@@ -206,6 +206,7 @@ def tochigi(self, process_date: datetime | str):
                 DataTochigi_DriveID = DataTochigi_Upload.get("parentReference").get("driveId")
                 DataTochigi_SiteID = DataTochigi_Upload.get("parentReference").get("siteId")
             else:
+                logger.info("Download data")
                 data = WebAccess(
                     username="hanh0704",
                     password="159753",
@@ -241,6 +242,7 @@ def tochigi(self, process_date: datetime | str):
                 if data["R_Status"].notna().all():
                     break
                 for upload_file_index, row in data.iterrows():
+                    logger.info(f"Index: {upload_file_index}")
                     if pd.notna(row["R_Status"]):
                         continue
                     # ---- Đánh dấu bot đang xử lí dòng/bài này ----
@@ -256,6 +258,7 @@ def tochigi(self, process_date: datetime | str):
                         time.sleep(0.5)
                     案件番号, _, _, _, 階, 資料リンク, _ = row[:7]
                     if pd.isna(階):
+                        logger.warning("Không xác định số tầng")
                         while True:
                             if api.write(
                                 site_id=DataTochigi_SiteID,
@@ -269,6 +272,7 @@ def tochigi(self, process_date: datetime | str):
                         break
                     breadcrumb = sp.get_breadcrumb(資料リンク)
                     if breadcrumb is None:
+                        logger.warning("Lỗi link")
                         while True:
                             if api.write(
                                 site_id=DataTochigi_SiteID,
@@ -281,6 +285,7 @@ def tochigi(self, process_date: datetime | str):
                             time.sleep(0.5)
                         break
                     if breadcrumb[-1].endswith("納材"):
+                        logger.warning("Tên folder có ghi ngày")
                         while True:
                             if api.write(
                                 site_id=DataTochigi_SiteID,
@@ -303,6 +308,7 @@ def tochigi(self, process_date: datetime | str):
                         )
                         counts: list[str] = [filepath for filepath in downloads]
                         floors: int = 2 if 階 == "-" else len(階.split(","))
+                        logger.info("Kiểm tra số lượng")
                         # ---- Đếm số lượng file #
                         has_pdf = any(f.lower().endswith(".pdf") for f in counts)
                         excel_exts = (".xls", ".xlsx", ".xlsm", ".xlsb", ".xlt", ".xltx", ".xltm")
@@ -336,6 +342,7 @@ def tochigi(self, process_date: datetime | str):
                                 new_path = os.path.join(excel_dir, filename)
                                 shutil.move(filepath, new_path)
                                 temp.append(new_path)
+                        logger.info("Chạy macro")
                         with FileLock("macro_tochigi.lock", timeout=300):
                             try:
                                 app = xw.App(visible=False)
@@ -365,6 +372,7 @@ def tochigi(self, process_date: datetime | str):
                         result = set(macro_data["G"][2:])
                         result = {x for x in result if pd.notna(x)}
                         if result != {"OK"}:
+                            logger.warning("Lỗi macro")
                             while True:
                                 if api.write(
                                     site_id=DataTochigi_SiteID,
@@ -377,6 +385,7 @@ def tochigi(self, process_date: datetime | str):
                                 time.sleep(0.5)
                             break
                         # Upload
+                        logger.info("Up data")
                         downloads: list[str] = temp
                         納品日 = f"{int(month)}月{int(day)}日"
                         while True:
@@ -409,6 +418,7 @@ def tochigi(self, process_date: datetime | str):
                                         break
                                     time.sleep(0.5)
                                 break
+                        logger.info("Đổi tên")
                         suffix = f"{month}-{day}納材"
                         sp.rename_breadcrumb(
                             資料リンク,
