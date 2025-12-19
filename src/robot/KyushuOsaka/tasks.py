@@ -8,12 +8,15 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+import redis
 import xlwings as xw
 from celery import shared_task
 from filelock import FileLock
 from playwright.sync_api import sync_playwright
 
 from src.core.config import settings
+from src.core.logger import Log
+from src.core.redis import REDIS_POOL
 from src.robot.KyushuOsaka.api import APISharePoint
 from src.robot.KyushuOsaka.automation import PowerApp, SharePoint
 
@@ -67,6 +70,9 @@ def kyushu_osaka(
     kyushu: bool | str = True,
     osaka: bool | str = True,
 ):
+    TaskID = self.request.id
+    logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
+    logger.info(f"Upload Kyushu-Osaka: {process_date}")
     # Xử lí đầu vào
     if isinstance(process_date, str):
         process_date = datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").date()
@@ -108,6 +114,7 @@ def kyushu_osaka(
             folder_id = item.get("id")
             break
     if folder_id is None:
+        logger.info("Không tìm thấy folder")
         raise FileNotFoundError("Không tìm thấy folder")
     # --- #
     files = api.get_item_from_another_item(
@@ -116,6 +123,7 @@ def kyushu_osaka(
         folder_id,
     ).get("value")
     if not files:
+        logger.info("Không tìm thấy file data")
         raise FileNotFoundError("Không tìm thấy file data")
     files = [(file.get("id"), file.get("name")) for file in files]
     # --- #
@@ -129,6 +137,7 @@ def kyushu_osaka(
         )
         != 1
     ):
+        logger.info("Không xác định được file data")
         raise FileNotFoundError("Không xác định được file data")
     # --- #
     temp_file = [
@@ -191,6 +200,7 @@ def kyushu_osaka(
                     return
                 suffix_name = f"{process_date.strftime("%m-%d")}納材"
                 for index, row in data.iterrows():
+                    logger.info(f"Index: {index}")
                     api.write(
                         site_id=file.get("site_id"),
                         drive_id=drive_id,
@@ -200,6 +210,7 @@ def kyushu_osaka(
                         sheet="データUP状況",
                     )
                     if pd.isna(row["資料リンク"]):
+                        logger.warning("Không có link data")
                         api.write(
                             site_id=file.get("site_id"),
                             drive_id=drive_id,
@@ -210,17 +221,19 @@ def kyushu_osaka(
                         )
                         break
                     if pd.isna(row["階"]):
+                        logger.warning("Không có số tầng")
                         api.write(
                             site_id=file.get("site_id"),
                             drive_id=drive_id,
                             item_id=file.get("item_id"),
                             range=f"E{index}",
-                            data=[["Không có link data"]],
+                            data=[["Không có số tầng"]],
                             sheet="データUP状況",
                         )
                         break
                     breadcrumb = sp.get_breadcrumb(row["資料リンク"])
                     if breadcrumb[-1].endswith("納材"):
+                        logger.warning("Tên folder có ghi ngày")
                         api.write(
                             site_id=file.get("site_id"),
                             drive_id=drive_id,
@@ -239,6 +252,7 @@ def kyushu_osaka(
                         save_to=download_path,
                     )
                     if not downloads:
+                        logger.warning("Không đủ data")
                         api.write(
                             site_id=file.get("site_id"),
                             drive_id=drive_id,
@@ -250,6 +264,7 @@ def kyushu_osaka(
                         break
                     count_floor = len(row["階"].split(",")) if hasattr(row["階"], "split") else None
                     if count_floor is None:
+                        logger.warning("Lỗi: kiểm tra cột 階")
                         api.write(
                             site_id=file.get("site_id"),
                             drive_id=drive_id,
@@ -298,6 +313,7 @@ def kyushu_osaka(
                             isError = True
                             break
                     if isError:
+                        logger.warning("Lỗi filename")
                         api.write(
                             site_id=file.get("site_id"),
                             drive_id=drive_id,
@@ -325,6 +341,7 @@ def kyushu_osaka(
                                 )
                         if os.listdir(download_path) == ["excel", "pdf"]:
                             break
+                    logger.info("Chạy macro")
                     try:
                         with FileLock("macro.lock", timeout=300):
                             app = xw.App(visible=False)
@@ -339,6 +356,7 @@ def kyushu_osaka(
                             wb_macro.close()
                             app.quit()
                     except Exception:
+                        logger.warning("Lỗi macro")
                         api.write(
                             site_id=file.get("site_id"),
                             drive_id=drive_id,
@@ -348,6 +366,7 @@ def kyushu_osaka(
                             sheet="データUP状況",
                         )
                         break
+                    logger.info("Up data")
                     if row["出荷工場"] == "九州":
                         if not sp.upload(
                             url="https://nskkogyo.sharepoint.com/sites/kyuusyuukouzyou",
@@ -395,6 +414,7 @@ def kyushu_osaka(
                             sheet="データUP状況",
                         )
                         break
+                    logger.info("Đổi tên")
                     if not sp.rename_breadcrumb(
                         url=row["資料リンク"],
                         new_name=f"{breadcrumb[-1]} {suffix_name}",
@@ -419,6 +439,7 @@ def kyushu_osaka(
                         )
                     if row["出荷工場"] == "大阪":
                         break  # Osaka không nhấn app
+                    logger.info("Nhấn app")
                     for building in list(
                         set(
                             [
