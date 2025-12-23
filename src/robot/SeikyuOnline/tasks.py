@@ -126,8 +126,6 @@ def seikyu_online(self, sheet_name: API | str = "/api/type/seikyu-online"):
             data.index = data.index + 1  # Index bắt đầu từ 1
             # ---- #
             for index, row in data.iterrows():
-                if index != 117:
-                    continue
                 LinkData: str = row["Y"]
                 if not validators.url(LinkData):
                     continue
