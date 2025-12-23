@@ -88,7 +88,7 @@ def seikyu_online(self, sheet_name: API | str = "/api/type/seikyu-online"):
         sheet_name = sheet_name.url
     with sync_playwright() as p:
         browser = p.chromium.launch(
-            headless=False,
+            headless=True,
             args=[
                 "--start-maximized",
             ],
@@ -172,7 +172,7 @@ def seikyu_online(self, sheet_name: API | str = "/api/type/seikyu-online"):
                 data = f.read()
             result = ResultService.put_object(
                 bucket_name=settings.MINIO_BUCKET,
-                object_name=f"SeikyuNgoaiHanwa/{datetime.datetime.now().strftime("%Y%m%d")}/{sheet_name}/≪ベトナム≫阪和興業　新(9日(10日分)、14日(15日分)、19日(20日分)、29日(末日分)に完成).xlsm",  # noqa
+                object_name=f"SeikyuNgoaiHanwa/{datetime.datetime.now().strftime("%Y%m%d")}/{sheet_name}/SeikyuHanwa.xlsm",  # noqa
                 data=io.BytesIO(data),
                 length=len(data),
             )
