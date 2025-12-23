@@ -1,6 +1,10 @@
+import io
 import os
+import re
+import shutil
 import tempfile
 from datetime import datetime
+from decimal import ROUND_HALF_UP, Decimal
 
 import pandas as pd
 import redis
@@ -12,7 +16,8 @@ from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
 from src.robot.SeikyuNgoaiHanwa.api import APISharePoint
-from src.robot.SeikyuNgoaiHanwa.automation import Excel, WebAccess
+from src.robot.SeikyuNgoaiHanwa.automation import Excel, SharePoint, WebAccess
+from src.service.result import ResultService
 
 
 @shared_task(bind=True, name="Seikyu Ngoài Hanwa")
@@ -125,6 +130,84 @@ def seikyu(
                 data = sheet_data
                 break
         # -- Extract Data--#
-        # result = []
-        # quote_url = []
-        # prices = []
+        quote_url = []
+        prices = []
+        with SharePoint(
+            domain=settings.SHAREPOINT_DOMAIN,
+            username=settings.SHAREPOINT_EMAIL,
+            password=settings.SHAREPOINT_PASSWORD,
+            playwright=p,
+            browser=browser,
+            context=context,
+        ) as sp:
+            data = data.iloc[9:]
+            data.columns = data.iloc[0]
+            data = data.iloc[1:].reset_index(drop=True)
+            for current, row in data.iterrows():
+                logger.info(f"{current}/{data['受注NO'].last_valid_index()}")
+                if (
+                    pd.isna(row["受注NO"])
+                    # Không xử lí giá trị màu xanh ở cột A
+                    or pd.isna(row["締日"])
+                    # Không xử lí dòng có giá trị 不足 ở cột B
+                    or row["追加/先行"].find("不足") != -1
+                    # Không xử lí ngày ngoài phạm vi
+                    or row["納期"].date() < self.process_start.get_date()
+                    or row["納期"].date() > self.process_end.get_date()
+                ):
+                    quote_url.append(row["見積URL"])
+                    prices.append(row["税抜金額"])
+                    continue
+                downloads = sp.download(url=row["365URL"], steps=[], file=".*.(xlsx|xlsm|xls)")
+                if not downloads or len(downloads) > 1:
+                    quote_url.append(row["見積URL"])
+                    prices.append(row["税抜金額"])
+                    continue
+                link, file_path = downloads[0]
+                prices_found = []
+                try:
+                    for _, sheet_data in Excel.read(file_path, cell_range="A1:CC1000"):
+                        for _, row in sheet_data.iterrows():
+                            row = " ".join([str(cell) for cell in row])
+                            if match := re.search(r"小\s*.*\s*計.*?(\d+(?:,\d{3})*(?:\.\d+)?)", row):
+                                cleaned_row = " ".join([word for word in row.split() if word not in ["nan", "None"]])
+                                print(f"Row: {cleaned_row}")
+                                prices_found.append(match.group(1))
+                                break
+                except Exception:
+                    prices_found = [0]
+                quote_url.append(link)
+                price: Decimal = Decimal(0)
+                if prices_found:
+                    price = Decimal(prices_found[0])
+                price = price.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+                prices.append(price)
+        Excel.write(file_path=SeikyuFile, data=[[item] for item in quote_url], sheet_name="請求一覧", cell_range="H11")
+        Excel.write(file_path=SeikyuFile, data=[[item] for item in prices], sheet_name="請求一覧", cell_range="F11")
+        result_file = f"≪ボット≫請求書 阪和以外 {from_date}-{to_date}.xlsm"
+        result_path = os.path.join(temp_dir, result_file)
+
+        # Copy file
+        shutil.copy2(SeikyuFile, result_path)
+
+        # Edit Excel (giữ macro)
+        wb = load_workbook(result_path, keep_vba=True)
+        ws = wb["請求一覧"]
+
+        for row in range(2, ws.max_row + 1):
+            ws[f"G{row}"].number_format = "yyyy/m/d"
+
+        wb.save(result_path)
+
+        # Upload to MinIO (binary)
+        with open(result_path, "rb") as f:
+            data = f.read()
+
+        result = ResultService.put_object(
+            bucket_name=settings.MINIO_BUCKET,
+            object_name=f"SeikyuNgoaiHanwa/{result_file}",
+            data=io.BytesIO(data),
+            length=len(data),
+        )
+
+        return result.object_name

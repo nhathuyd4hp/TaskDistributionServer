@@ -1,3 +1,5 @@
+import datetime
+import io
 import re
 import tempfile
 
@@ -15,6 +17,7 @@ from src.core.redis import REDIS_POOL
 from src.core.type import API
 from src.robot.SeikyuOnline.api import APISharePoint
 from src.robot.SeikyuOnline.automation import SharePoint
+from src.service.result import ResultService
 
 
 def get_chubo(excelPath: str) -> float:
@@ -127,10 +130,10 @@ def seikyu_online(self, sheet_name: API | str = "/api/type/seikyu-online"):
                 if not validators.url(LinkData):
                     continue
                 # Trường hợp đặc biệt
-                # if pd.notna(row["J"]) and pd.notna(row["T"]):
-                #     continue
-                # if pd.notna(row["Z"]):
-                #     continue
+                if pd.notna(row["J"]) and pd.notna(row["T"]):
+                    continue
+                if pd.notna(row["Z"]):
+                    continue
                 logger.info(f"{index} - {row["B"]} - {row["C"]} - {LinkData}")
                 downloads = sp.download(
                     url=LinkData,
@@ -164,3 +167,14 @@ def seikyu_online(self, sheet_name: API | str = "/api/type/seikyu-online"):
                             break
             wb.save(excel_file)
             wb.close()
+
+            with open(excel_file, "rb") as f:
+                data = f.read()
+            result = ResultService.put_object(
+                bucket_name=settings.MINIO_BUCKET,
+                object_name=f"SeikyuNgoaiHanwa/{datetime.datetime.now().strftime("%Y%m%d")}/{sheet_name}/≪ベトナム≫阪和興業　新(9日(10日分)、14日(15日分)、19日(20日分)、29日(末日分)に完成).xlsm",  # noqa
+                data=io.BytesIO(data),
+                length=len(data),
+            )
+
+            return result.object_name
