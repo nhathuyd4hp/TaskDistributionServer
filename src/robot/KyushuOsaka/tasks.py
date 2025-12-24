@@ -154,7 +154,7 @@ def kyushu_osaka(
     item_id = temp_file[0][0]
     item_name = temp_file[0][1]
     # --- #
-    macro_file = "src/robot/KyushuOsaka/resource/マクロチェック(240819ver).xlsm"
+    macro_file = "src/resource/マクロチェック(240819ver).xlsm"
 
     item_id = item_id
     driver_id = folder_id
