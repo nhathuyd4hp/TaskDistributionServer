@@ -232,4 +232,6 @@ class SharePoint:
             time.sleep(5)
             return True
         except TimeoutError:
+            if self.page.locator("div[role='progressbar']").count() == 1:
+                return False
             return self.rename_breadcrumb(url, new_name)

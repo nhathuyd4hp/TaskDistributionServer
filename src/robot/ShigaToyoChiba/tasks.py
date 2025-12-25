@@ -497,7 +497,15 @@ def shiga_toyo_chiba(
                                 data=[["Lỗi: kiểm tra cột 出荷工場"]],
                             )
                             break
-                        sp.rename_breadcrumb(url=url, new_name=f"{breadcrumb[-1]} {suffix_name}")
+                        if not sp.rename_breadcrumb(url=url, new_name=f"{breadcrumb[-1]} {suffix_name}"):
+                            APIClient.write(
+                                siteId=DataShigaUp_SiteID,
+                                driveId=DataShigaUp_DriveID,
+                                itemId=DataShigaUp_ItemID,
+                                range=f"E{index+2}",
+                                data=[["Chưa có trên Power App | Lỗi đổi tên folder"]],
+                            )
+                            break
                         APIClient.write(
                             siteId=DataShigaUp_SiteID,
                             driveId=DataShigaUp_DriveID,
