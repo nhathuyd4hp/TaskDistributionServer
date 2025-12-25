@@ -1,22 +1,31 @@
 import io
 import re
+import tempfile
 from datetime import datetime
 
 import pandas as pd
+import redis
 from celery import shared_task
 from playwright.sync_api import sync_playwright
 
 from src.core.config import settings
+from src.core.logger import Log
+from src.core.redis import REDIS_POOL
 from src.robot.DrawingClassic.automation import AndPad, SharePoint, WebAccess
-from src.service import ResultService
+from src.service import ResultService as minio
 
 
 @shared_task(
     bind=True,
-    name="Gửi bản vẽ xác nhận Classic",
+    name="Gửi tin nhắn xác nhận Classic",
 )
 def gui_ban_ve_xac_nhan_classic(self):
-    with sync_playwright() as p:
+    logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
+    logger.info("Bắt đầu")
+    with (
+        sync_playwright() as p,
+        tempfile.TemporaryDirectory() as temp_dir,
+    ):
         browser = p.chromium.launch(headless=False, args=["--start-maximized"])
         context = browser.new_context(no_viewport=True)
         with (
@@ -51,25 +60,33 @@ def gui_ban_ve_xac_nhan_classic(self):
             # ---- #
             for index, row in orders.iterrows():
                 _, _, 物件名, 確定納期, 担当2, 資料リンク, _ = row
+                logger.info(f"{物件名} - {確定納期} - {担当2} - {資料リンク}")
                 if pd.isna(物件名):
+                    logger.warning("物件名 is null")
                     continue
                 if pd.isna(資料リンク):
+                    logger.warning("資料リンク is null")
                     continue
                 if pd.isna(確定納期):
+                    logger.warning("確定納期 is null")
                     continue
                 if pd.isna(担当2):
+                    logger.warning("担当2 is null")
                     continue
+                logger.info("Download PDF")
                 downloads = sp.download_files(
                     url=資料リンク,
                     file=re.compile(r".*\.pdf$", re.IGNORECASE),
                     steps=[
                         re.compile("^割付図・エクセル$"),
                     ],
-                    save_to="downloads/DrawingClassic",
+                    save_to=temp_dir,
                 )
                 if len(downloads) != 1:
-                    orders.at[index, "Result"] = f"Tìm thấy {len(downloads)} file bản vẽ"
+                    logger.warning(f"{len(downloads)} PDF")
+                    orders.at[index, "Result"] = f"Tìm thấy {len(downloads)} file PDF"
                     continue
+                logger.info("Send message")
                 orders.at[index, "Result"] = ap.send_message(
                     object_name=物件名,
                     message=f"""いつもお世話になっております。
@@ -86,10 +103,17 @@ def gui_ban_ve_xac_nhan_classic(self):
             csv_buffer = io.StringIO()
             orders.to_csv(csv_buffer, index=False)
             csv_buffer.seek(0)
-            result = ResultService.put_object(
+
+            # Chuyển string sang bytes để upload
+            binary_data = io.BytesIO(csv_buffer.getvalue().encode("utf-8"))
+
+            result = minio.put_object(
                 bucket_name=settings.MINIO_BUCKET,
-                object_name=f"DrawingClassic/{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.xlsx",
-                data=io.BytesIO(csv_buffer.getvalue().encode("utf-8")),
-                length=len(csv_buffer.getvalue()),
+                # SỬA Ở ĐÂY: đổi .xlsx thành .csv
+                object_name=f"DrawingClassic/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv",
+                data=binary_data,
+                length=len(binary_data.getbuffer()),
+                content_type="text/csv",
             )
+
             return result.object_name

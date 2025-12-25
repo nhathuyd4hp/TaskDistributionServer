@@ -97,11 +97,12 @@ class AndPad:
                         ).is_checked():
                             popup.locator("label[data-test='notify-member-cell'] > input[type='checkbox']").click()
                         popup.locator(selector="wc-tsukuri-text", has_text="選択").click()
+                time.sleep(1)
                 # Click
-                popup.locator(selector="wc-tsukuri-text", has_text="送信").click()
-                time.sleep(2.5)
-                popup.locator("input[type='file'][data-test='input-document']").set_input_files(attachments)
-                time.sleep(2.5)
+                # popup.locator(selector="wc-tsukuri-text", has_text="送信").click()
+                # time.sleep(2.5)
+                # popup.locator("input[type='file'][data-test='input-document']").set_input_files(attachments)
+                # time.sleep(2.5)
                 popup.close()
                 return True
         except TimeoutError:

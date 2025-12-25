@@ -399,12 +399,32 @@ def tochigi(self, process_date: datetime | str):
                                 + [os.path.join(excel_dir, f) for f in os.listdir(excel_dir)]
                             ),
                         )
+                        while True:
+                            if api.write(
+                                site_id=DataTochigi_SiteID,
+                                drive_id=DataTochigi_DriveID,
+                                item_id=DataTochigi_ItemID,
+                                range=f"G{upload_file_index+2}",
+                                data=[["Chưa có trên Power App | Đang đổi tên"]],
+                            ):
+                                break
+                            time.sleep(0.5)
                         logger.info("Đổi tên")
                         suffix = f"{month}-{day}納材"
-                        sp.rename_breadcrumb(
+                        if sp.rename_breadcrumb(
                             資料リンク,
                             f"{breadcrumb[-1]} {suffix}",
-                        )
+                        ):
+                            while True:
+                                if api.write(
+                                    site_id=DataTochigi_SiteID,
+                                    drive_id=DataTochigi_DriveID,
+                                    item_id=DataTochigi_ItemID,
+                                    range=f"G{upload_file_index+2}",
+                                    data=[["Chưa có trên Power App"]],
+                                ):
+                                    break
+                                time.sleep(0.5)
                         break
                     break
 
