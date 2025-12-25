@@ -83,6 +83,13 @@ class AndPad:
                 message_box = popup.wait_for_selector("textarea[placeholder='メッセージを入力']", state="visible")
                 message_box.fill("")
                 message_box.fill(message)
+                # Clear tag
+                time.sleep(1)
+                while True:
+                    if popup.locator("span[class='label-chat-to__delete']:visible").count() == 0:
+                        break
+                    popup.locator("span[class='label-chat-to__delete']:visible").nth(0).click()
+                    time.sleep(0.5)
                 if tags:
                     for tag in tags:
                         popup.locator("button", has=popup.locator("span", has_text="お知らせ")).click()
@@ -97,12 +104,16 @@ class AndPad:
                         ).is_checked():
                             popup.locator("label[data-test='notify-member-cell'] > input[type='checkbox']").click()
                         popup.locator(selector="wc-tsukuri-text", has_text="選択").click()
-                time.sleep(1)
+                        time.sleep(0.5)
+                    if popup.locator("span[class='chat-to__label']:visible").count() != 3:
+                        popup.close()
+                        return self.send_message(object_name, message)
+                time.sleep(0.5)
                 # Click
-                # popup.locator(selector="wc-tsukuri-text", has_text="送信").click()
-                # time.sleep(2.5)
-                # popup.locator("input[type='file'][data-test='input-document']").set_input_files(attachments)
-                # time.sleep(2.5)
+                popup.locator(selector="wc-tsukuri-text", has_text="送信").click()
+                time.sleep(2.5)
+                popup.locator("input[type='file'][data-test='input-document']").set_input_files(attachments)
+                time.sleep(2.5)
                 popup.close()
                 return True
         except TimeoutError:

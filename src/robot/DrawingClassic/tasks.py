@@ -21,7 +21,6 @@ from src.service import ResultService as minio
 )
 def gui_ban_ve_xac_nhan_classic(self):
     logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
-    logger.info("Bắt đầu")
     with (
         sync_playwright() as p,
         tempfile.TemporaryDirectory() as temp_dir,
@@ -53,12 +52,14 @@ def gui_ban_ve_xac_nhan_classic(self):
                 context=context,
             ) as ap,
         ):
+            logger.info("WebAccess - download data")
             orders = wa.download_data(building="クラシスホーム")
             orders = orders[orders["確未"] == "未"]
             orders = orders[["案件番号", "得意先名", "物件名", "確定納期", "担当2", "資料リンク"]]
+            logger.info(orders.shape)
             orders["Result"] = pd.NA
             # ---- #
-            for index, row in orders.iterrows():
+            for index, row in orders.head(5).iterrows():
                 _, _, 物件名, 確定納期, 担当2, 資料リンク, _ = row
                 logger.info(f"{物件名} - {確定納期} - {担当2} - {資料リンク}")
                 if pd.isna(物件名):
@@ -84,7 +85,7 @@ def gui_ban_ve_xac_nhan_classic(self):
                 )
                 if len(downloads) != 1:
                     logger.warning(f"{len(downloads)} PDF")
-                    orders.at[index, "Result"] = f"Tìm thấy {len(downloads)} file PDF"
+                    orders.at[index, "Result"] = f"{len(downloads)} file PDF"
                     continue
                 logger.info("Send message")
                 orders.at[index, "Result"] = ap.send_message(
@@ -100,20 +101,24 @@ def gui_ban_ve_xac_nhan_classic(self):
                     attachments=downloads[0],
                 )
             # --- Upload to Minio
-            csv_buffer = io.StringIO()
-            orders.to_csv(csv_buffer, index=False)
-            csv_buffer.seek(0)
+            # 1. Khởi tạo buffer dạng BytesIO (vì Excel là binary)
+            excel_buffer = io.BytesIO()
 
-            # Chuyển string sang bytes để upload
-            binary_data = io.BytesIO(csv_buffer.getvalue().encode("utf-8"))
+            # 2. Ghi dataframe vào buffer dưới dạng Excel
+            # Lưu ý: Cần cài thư viện openpyxl (pip install openpyxl)
+            orders.to_excel(excel_buffer, index=False, engine="openpyxl")
+
+            # 3. Đưa con trỏ về đầu file để chuẩn bị đọc
+            excel_buffer.seek(0)
 
             result = minio.put_object(
                 bucket_name=settings.MINIO_BUCKET,
-                # SỬA Ở ĐÂY: đổi .xlsx thành .csv
-                object_name=f"DrawingClassic/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv",
-                data=binary_data,
-                length=len(binary_data.getbuffer()),
-                content_type="text/csv",
+                # SỬA Ở ĐÂY: đổi đuôi file thành .xlsx
+                object_name=f"DrawingClassic/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx",
+                data=excel_buffer,
+                length=excel_buffer.getbuffer().nbytes,
+                # SỬA Ở ĐÂY: đổi content_type sang định dạng Excel
+                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
             return result.object_name
