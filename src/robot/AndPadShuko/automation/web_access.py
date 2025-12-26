@@ -6,7 +6,6 @@ from playwright._impl._errors import TimeoutError
 from playwright.sync_api import sync_playwright
 
 
-
 class WebAccess:
     def __init__(
         self,
@@ -60,7 +59,6 @@ class WebAccess:
             self.page.wait_for_selector("input[type='password']").fill(self.password)
             self.page.wait_for_selector("button[type='submit'][class='btn login']").click()
             try:
-                account: str = self.page.locator("div[id='f-menus'] > div[class='name']").text_content().split("：")[-1]
                 return True
             except TimeoutError:
                 return False

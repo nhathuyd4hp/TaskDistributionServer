@@ -1,28 +1,31 @@
-from datetime import datetime,date
 import os
-from src.service import ResultService as minio
 import re
 import tempfile
-import redis
-from src.core.logger import Log
-from src.core.redis import REDIS_POOL
-from src.core.config import settings
+from datetime import date, datetime
+
 import numpy as np
 import pandas as pd
-from playwright.sync_api import sync_playwright
+import redis
 from celery import shared_task
-from src.robot.AndPadShuko.automation import MailDealer,WebAccess
+from playwright.sync_api import sync_playwright
+
+from src.core.config import settings
+from src.core.logger import Log
+from src.core.redis import REDIS_POOL
+from src.robot.AndPadShuko.automation import MailDealer, WebAccess
+from src.service import ResultService as minio
+
 
 @shared_task(
     bind=True,
     name="AndPad Shuko",
-    soft_time_limit=25 * 60, 
+    soft_time_limit=25 * 60,
     time_limit=30 * 60,
 )
 def main(self):
     logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     logger.info(date.today())
-    # ----- # 
+    # ----- #
     with (
         sync_playwright() as p,
         tempfile.TemporaryDirectory() as temp_dir,
@@ -58,8 +61,8 @@ def main(self):
             for column in mails.columns:
                 if not column:
                     mails.drop(column, axis=1, errors="ignore", inplace=True)
-            mails.to_excel(os.path.join(temp_dir,ResultFile), index=False)
-            mails = pd.read_excel(os.path.join(temp_dir,ResultFile))
+            mails.to_excel(os.path.join(temp_dir, ResultFile), index=False)
+            mails = pd.read_excel(os.path.join(temp_dir, ResultFile))
             for index, row in mails.iterrows():
                 id = row[" ID "]
                 subject = row[" 件名 "]
@@ -68,7 +71,9 @@ def main(self):
                 # ---- #
                 if match := re.search(r"([\w\W]+?新築工事)", subject):
                     案件名_物件名 = match.group(1)
-                    案件名_物件名 = 案件名_物件名.replace("新築工事", "").replace("【ANDPAD】", "").replace("Fw:", "").strip()
+                    案件名_物件名 = (
+                        案件名_物件名.replace("新築工事", "").replace("【ANDPAD】", "").replace("Fw:", "").strip()
+                    )
                     data = wa.download_data(案件名_物件名)
                     if data.shape[0] != 1:
                         logger.warning("Không tim thấy ở WebAccess")
@@ -91,12 +96,11 @@ def main(self):
                 else:
                     logger.warning("Không tìm thấy 案件名/物件名")
                     mails.at[index, " Note "] = "Không tìm thấy 案件名/物件名"
-            mails.to_excel(os.path.join(temp_dir,ResultFile), index=False)
+            mails.to_excel(os.path.join(temp_dir, ResultFile), index=False)
             result = minio.fput_object(
                 bucket_name=settings.MINIO_BUCKET,
                 object_name=f"DrawingClassic/{ResultFile}",
-                file_path=os.path.join(temp_dir,ResultFile),
+                file_path=os.path.join(temp_dir, ResultFile),
                 content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
             return result.object_name
-
