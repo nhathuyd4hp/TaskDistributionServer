@@ -13,8 +13,8 @@ from selenium.common.exceptions import (
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
-from src.common.decorator import retry_if_exception
-from src.core import IWebDriver, IWebDriverMeta
+from src.robot.Kaneka.common.decorator import retry_if_exception
+from src.robot.Kaneka.core import IWebDriver, IWebDriverMeta
 
 
 class WebAccessMeta(IWebDriverMeta):
