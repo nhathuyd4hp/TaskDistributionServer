@@ -10,3 +10,4 @@ from src.robot.OHDMITSUMORI import tasks  # noqa
 from src.robot.Kaneka import tasks  # noqa
 from src.robot.TamaNouhinsumi import tasks  # noqa
 from src.robot.FuriwakeOsaka import tasks  # noqa
+from src.robot.AndPadShuko import tasks  # noqa
