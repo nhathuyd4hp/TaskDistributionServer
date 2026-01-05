@@ -225,3 +225,5 @@ results/
 *.lock
 *.exe
 *.txt
+*.xlsx
+*.xlsm
