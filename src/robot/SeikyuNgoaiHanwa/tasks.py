@@ -152,8 +152,8 @@ def seikyu(
                     # Không xử lí dòng có giá trị 不足 ở cột B
                     or row["追加/先行"].find("不足") != -1
                     # Không xử lí ngày ngoài phạm vi
-                    or row["納期"].date() < self.process_start.get_date()
-                    or row["納期"].date() > self.process_end.get_date()
+                    or row["納期"].date() < from_date
+                    or row["納期"].date() > to_date
                 ):
                     quote_url.append(row["見積URL"])
                     prices.append(row["税抜金額"])
