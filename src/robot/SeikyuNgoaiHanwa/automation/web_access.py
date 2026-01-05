@@ -54,17 +54,9 @@ class WebAccess:
             self.page.bring_to_front()
             with self.page.expect_navigation(wait_until="domcontentloaded"):
                 self.page.locator("a[class='fa fa-industry']").click()
-            # Clear
             # Filter
             self.page.locator("input[name='search_fix_deliver_date_from']").fill(str(from_date).replace("-", "/"))
             self.page.locator("input[name='search_fix_deliver_date_to']").fill(str(to_date).replace("-", "/"))
-            while True:
-                factory = self.page.locator("button[id='multi_factory_cd_ms']")
-                if factory.text_content() == "栃木":
-                    break
-                factory.click()
-                self.page.locator("label[for^='ui-multiselect-1-multi_factory_cd-']", has_text="栃木").check()
-                factory.click()
             # Search
             with self.page.expect_navigation(wait_until="networkidle"):
                 self.page.locator("button[class='search fa fa-search']").click()
