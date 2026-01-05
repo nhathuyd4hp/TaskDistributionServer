@@ -22,7 +22,7 @@ def Tama_Ankenka(self):
         )
         process.wait()
 
-    file_path = exe_path.parent / "案件化.xlsm"
+    file_path = exe_path.parent / "結果.xlsm"
 
     result = minio.fput_object(
         bucket_name=settings.MINIO_BUCKET,
