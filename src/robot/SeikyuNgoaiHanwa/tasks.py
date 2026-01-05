@@ -71,23 +71,6 @@ def seikyu(
         if data.empty:
             return
         data = data[~data["商社名"].str.contains("阪和", na=False)]
-        Excel.clear_contents(file_path=SeikyuFile, sheet_name="ACCESS貼り付け")
-        Excel.write(file_path=SeikyuFile, data=data.columns.to_list(), sheet_name="ACCESS貼り付け")
-        Excel.write(file_path=SeikyuFile, data=data.values, sheet_name="ACCESS貼り付け", cell_range="A2")
-        Excel.macro(file_path=SeikyuFile, name="narabekae")
-        rows, _ = pd.read_excel(
-            io=SeikyuFile,
-            sheet_name="請求一覧",
-            header=None,
-        ).shape
-        # -- Clear Content 請求一覧 -- #
-        for i in ["F", "H", "I"]:
-            Excel.clear_contents(
-                file_path=SeikyuFile,
-                cell_range=f"{i}11:{i}{rows}",
-                sheet_name="請求一覧",
-                visible=False,
-            )
         # Tìm dòng có công thức
         wb = load_workbook(SeikyuFile, data_only=False)
         ws = wb["請求一覧"]
@@ -111,24 +94,18 @@ def seikyu(
                 first_row_with_formula = row
                 break
         # -- Copy Data -- #
-        for sheet_name, sheet_data in Excel.read(
+        for sheet_name, _ in Excel.read(
             file_path=SeikyuFile,
             visible=False,
         ):
-            if sheet_name == "ACCESS貼り付け":
-                sheet_data.columns = sheet_data.iloc[0]
-                sheet_data = sheet_data.iloc[1:].reset_index(drop=True)
+            if sheet_name == "請求一覧":
                 Excel.write(
                     file_path=SeikyuFile,
-                    data=[[item] for item in sheet_data["受注NO"].to_list()],
+                    data=[[item] for item in data["受注NO"].to_list()],
                     cell_range=f"I{first_row_with_formula}",
                     sheet_name="請求一覧",
                     visible=False,
                 )
-        for sheet_name, sheet_data in Excel.read(SeikyuFile, visible=False):
-            if sheet_name == "請求一覧":
-                data = sheet_data
-                break
         # -- Extract Data--#
         quote_url = []
         prices = []
@@ -140,7 +117,11 @@ def seikyu(
             browser=browser,
             context=context,
         ) as sp:
-            data = data.iloc[9:]
+            data = pd.read_excel(
+                io=SeikyuFile,
+                sheet_name="請求一覧",
+            )
+            data = data.iloc[8:]
             data.columns = data.iloc[0]
             data = data.iloc[1:].reset_index(drop=True)
             for current, row in data.iterrows():
