@@ -16,3 +16,4 @@ from src.robot.KEIAIANKENKA import tasks  # noqa
 from src.robot.ToeiNoukihikaku import tasks  # noqa
 from src.robot.TamaAnkenka import tasks  # noqa
 from src.robot.Yokohama_365_Moving import tasks  # noqa
+from src.robot.TamaZumenSoufu import tasks # noqa
