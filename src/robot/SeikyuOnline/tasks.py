@@ -1,4 +1,3 @@
-import datetime
 import io
 import re
 import tempfile
@@ -169,7 +168,7 @@ def seikyu_online(self, sheet_name: API | str = "/api/type/seikyu-online"):
                 data = f.read()
             result = ResultService.put_object(
                 bucket_name=settings.MINIO_BUCKET,
-                object_name=f"SeikyuNgoaiHanwa/{datetime.datetime.now().strftime("%Y%m%d")}/{sheet_name}/SeikyuHanwa.xlsm",  # noqa
+                object_name=f"SeikyuHanwa/{TaskID}/SeikyuHanwa.xlsm",
                 data=io.BytesIO(data),
                 length=len(data),
             )
