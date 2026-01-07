@@ -227,3 +227,5 @@ results/
 *.txt
 *.xlsx
 *.xlsm
+bin/
+Tesseract/
