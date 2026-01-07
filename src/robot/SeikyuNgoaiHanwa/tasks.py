@@ -193,7 +193,7 @@ def seikyu(
 
         result = ResultService.put_object(
             bucket_name=settings.MINIO_BUCKET,
-            object_name=f"SeikyuNgoaiHanwa/seikuy_ngoai_hanwa_{self.request.id}.xlsm",
+            object_name=f"SeikyuNgoaiHanwa/{self.request.id}/seikuy_ngoai_hanwa.xlsm",
             data=io.BytesIO(data),
             length=len(data),
         )
