@@ -3,6 +3,9 @@ from pathlib import Path
 
 from celery import shared_task
 
+from src.core.config import settings
+from src.service import ResultService as minio
+
 
 @shared_task(bind=True, name="Toei Noukihikaku")
 def KEIAI_ANKENKA(self):
@@ -18,3 +21,18 @@ def KEIAI_ANKENKA(self):
             [str(exe_path)], cwd=str(exe_path.parent), stdout=f, stderr=subprocess.STDOUT, text=True
         )
         process.wait()
+
+    result_file = exe_path.parent / "結果.xlsx"
+
+    object_name = f"ToeiNoukihikaku/{self.request.id}.xlsx"
+
+    result = minio.upload_file(
+        file_path=str(result_file),
+        bucket=settings.MINIO_BUCKET,
+        object_name=object_name,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    result_file.unlink()
+
+    return result.object_name
