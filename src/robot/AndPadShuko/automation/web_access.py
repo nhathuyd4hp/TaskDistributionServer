@@ -99,7 +99,10 @@ class WebAccess:
                 save_path = os.path.abspath(download.suggested_filename)
                 os.makedirs(os.path.dirname(save_path), exist_ok=True)
                 download.save_as(save_path)
-                orders = pd.read_csv(save_path, encoding="cp932")
+                try:
+                    orders = pd.read_csv(save_path, encoding="cp932")
+                except UnicodeDecodeError:
+                    orders = pd.read_csv(save_path)
                 os.remove(save_path)
                 return orders
         except TimeoutError:
