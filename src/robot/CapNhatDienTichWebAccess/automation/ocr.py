@@ -1,7 +1,7 @@
 import os
 import re
 import shutil
-from uuid import uuid4
+import tempfile
 
 import cv2
 import easyocr
@@ -71,30 +71,58 @@ class OCR:
         return processed_paths
 
     def get_area(self, pdf_path: str) -> float | None:
-        output_folder = f"images/{str(uuid4())}"
-        self.logger.info(f"Processing {os.path.basename(pdf_path)}")
-        images = self.pdf_2_png(pdf_path=pdf_path, output_folder=output_folder)
-        area = []
-        for image_path in images:
-            image = Image.open(image_path).convert("RGB")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_folder = temp_dir
+            self.logger.info(f"Processing {os.path.basename(pdf_path)}")
+            images = self.pdf_2_png(pdf_path=pdf_path, output_folder=output_folder)
+            area = []
+            for image_path in images:
+                image = Image.open(image_path).convert("RGB")
 
-            # 2️⃣ Tiền xử lý ảnh cho mô hình TableTransformer
-            inputs = self.processor(images=image, return_tensors="pt")
-            outputs = self.model(**inputs)
+                # 2️⃣ Tiền xử lý ảnh cho mô hình TableTransformer
+                inputs = self.processor(images=image, return_tensors="pt")
+                outputs = self.model(**inputs)
 
-            # 3️⃣ Xử lý kết quả (bảng được phát hiện)
-            target_sizes = torch.tensor([image.size[::-1]])  # (height, width)
-            results = self.processor.post_process_object_detection(outputs, threshold=0.7, target_sizes=target_sizes)[0]
+                # 3️⃣ Xử lý kết quả (bảng được phát hiện)
+                target_sizes = torch.tensor([image.size[::-1]])  # (height, width)
+                results = self.processor.post_process_object_detection(
+                    outputs, threshold=0.7, target_sizes=target_sizes
+                )[0]
 
-            # 🟩 Lọc ra các vùng có nhãn là "table"
-            tables = []
-            for box, score, label in zip(results["boxes"], results["scores"], results["labels"]):
-                if self.model.config.id2label[label.item()] == "table":
-                    tables.append((score.item(), box))
+                # 🟩 Lọc ra các vùng có nhãn là "table"
+                tables = []
+                for box, score, label in zip(results["boxes"], results["scores"], results["labels"]):
+                    if self.model.config.id2label[label.item()] == "table":
+                        tables.append((score.item(), box))
 
-            if not tables:
-                results = self.reader.readtext(image_path)
-                text = " ".join([text for _, text, _ in results]).replace("O", "0")
+                if not tables:
+                    results = self.reader.readtext(image_path)
+                    text = " ".join([text for _, text, _ in results]).replace("O", "0")
+                    pattern = r"(?<!\d)(\d+(?:\s*[., ]\s*\d+)?)[ ]*m(?:\?2|z2|²|2|\?|z|e)(?![A-Za-z0-9])"
+                    if match := re.findall(pattern, text):
+                        value = match[-1]
+                        value = value.replace(",", ".")
+                        value = value.replace(" ", ".")
+                        value = re.sub(r"\.{2,}", ".", value)
+                        try:
+                            if float(re.sub(r"[^\d.]", "", value)) and float(re.sub(r"[^\d.]", "", value)) < 1000:
+                                area.append(float(re.sub(r"[^\d.]", "", value)))
+                                self.logger.info(f"EasyOCR: Extract {value} from {repr(text)}")
+                            else:
+                                return None
+                        except ValueError:
+                            self.logger.warning(f"EasyOCR: Failed to convert {value}")
+                    continue  # không có bảng nào
+
+                # 🟦 Chỉ chọn bảng có score cao nhất
+                _, best_box = max(tables, key=lambda x: x[0])
+                x_min, y_min, x_max, y_max = best_box.int().tolist()
+
+                # 🟧 Cắt vùng bảng có độ tin cậy cao nhất
+                table_crop = image.crop((x_min, y_min, x_max, y_max))
+
+                # Image to String
+                text = pytesseract.image_to_string(table_crop, lang="eng+jpn").replace("O", "0")
                 pattern = r"(?<!\d)(\d+(?:\s*[., ]\s*\d+)?)[ ]*m(?:\?2|z2|²|2|\?|z|e)(?![A-Za-z0-9])"
                 if match := re.findall(pattern, text):
                     value = match[-1]
@@ -104,53 +132,28 @@ class OCR:
                     try:
                         if float(re.sub(r"[^\d.]", "", value)) and float(re.sub(r"[^\d.]", "", value)) < 1000:
                             area.append(float(re.sub(r"[^\d.]", "", value)))
-                            self.logger.info(f"EasyOCR: Extract {value} from {repr(text)}")
+                            self.logger.info(f"Pytesseract: Extract {value} from {repr(text)}")
                         else:
                             return None
                     except ValueError:
-                        self.logger.warning(f"EasyOCR: Failed to convert {value}")
-                continue  # không có bảng nào
-
-            # 🟦 Chỉ chọn bảng có score cao nhất
-            _, best_box = max(tables, key=lambda x: x[0])
-            x_min, y_min, x_max, y_max = best_box.int().tolist()
-
-            # 🟧 Cắt vùng bảng có độ tin cậy cao nhất
-            table_crop = image.crop((x_min, y_min, x_max, y_max))
-
-            # Image to String
-            text = pytesseract.image_to_string(table_crop, lang="eng+jpn").replace("O", "0")
-            pattern = r"(?<!\d)(\d+(?:\s*[., ]\s*\d+)?)[ ]*m(?:\?2|z2|²|2|\?|z|e)(?![A-Za-z0-9])"
-            if match := re.findall(pattern, text):
-                value = match[-1]
-                value = value.replace(",", ".")
-                value = value.replace(" ", ".")
-                value = re.sub(r"\.{2,}", ".", value)
-                try:
-                    if float(re.sub(r"[^\d.]", "", value)) and float(re.sub(r"[^\d.]", "", value)) < 1000:
-                        area.append(float(re.sub(r"[^\d.]", "", value)))
-                        self.logger.info(f"Pytesseract: Extract {value} from {repr(text)}")
-                    else:
-                        return None
-                except ValueError:
-                    self.logger.warning(f"Pytesseract: Failed to convert {value}")
-            else:
-                result = self.reader.readtext(np.array(table_crop), detail=1)
-                text = " ".join([t for _, t, _ in result]).replace("O", "0")
-                if match := re.findall(pattern, text):
-                    value = match[-1]
-                    value = value.replace(",", ".")
-                    value = value.replace(" ", ".")
-                    value = re.sub(r"\.{2,}", ".", value)
-                    try:
-                        if float(re.sub(r"[^\d.]", "", value)) and float(re.sub(r"[^\d.]", "", value)) < 1000:
-                            area.append(float(re.sub(r"[^\d.]", "", value)))
-                            self.logger.info(f"EasyOCR: Extract {value} from {repr(text)}")
-                        else:
-                            return None
-                    except ValueError:
-                        self.logger.warning(f"Failed to convert {value}")
-        shutil.rmtree(output_folder)
-        if len(area) != len(images):
-            return None
-        return round(sum(area), 2)
+                        self.logger.warning(f"Pytesseract: Failed to convert {value}")
+                else:
+                    result = self.reader.readtext(np.array(table_crop), detail=1)
+                    text = " ".join([t for _, t, _ in result]).replace("O", "0")
+                    if match := re.findall(pattern, text):
+                        value = match[-1]
+                        value = value.replace(",", ".")
+                        value = value.replace(" ", ".")
+                        value = re.sub(r"\.{2,}", ".", value)
+                        try:
+                            if float(re.sub(r"[^\d.]", "", value)) and float(re.sub(r"[^\d.]", "", value)) < 1000:
+                                area.append(float(re.sub(r"[^\d.]", "", value)))
+                                self.logger.info(f"EasyOCR: Extract {value} from {repr(text)}")
+                            else:
+                                return None
+                        except ValueError:
+                            self.logger.warning(f"Failed to convert {value}")
+            shutil.rmtree(output_folder)
+            if len(area) != len(images):
+                return None
+            return round(sum(area), 2)

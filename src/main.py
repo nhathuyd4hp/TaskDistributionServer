@@ -105,7 +105,7 @@ async def subscriber(*args):
                 await LOG_QUEUE.put(
                     {
                         "run_id": task_id,
-                        "timestamp": datetime.now().strptime("%Y-%m-%d %H:%M:%S,%f"),
+                        "timestamp": datetime.now().strptime("%Y-%m-%d %H:%M:%S"),
                         "level": "INFO",
                         "message": raw_message,
                     }
@@ -113,7 +113,7 @@ async def subscriber(*args):
                 await LOG_QUEUE.put(
                     {
                         "run_id": task_id,
-                        "timestamp": datetime.now().strptime("%Y-%m-%d %H:%M:%S,%f"),
+                        "timestamp": datetime.now().strptime("%Y-%m-%d %H:%M:%S"),
                         "level": "WARNING",
                         "message": str(e),
                     }

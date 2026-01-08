@@ -17,7 +17,7 @@ from src.service import ResultService as minio
 @shared_task(bind=True, name="Cập nhật diện tích WebAccess")
 def update_area_web_access(self):
     logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
-    ocr = OCR(poppler_path="src/resource/bin", tesseract_path="src/resource/Tesseract/tesseract.exe")
+    ocr = OCR(logger=logger, poppler_path="src/resource/bin", tesseract_path="src/resource/Tesseract/tesseract.exe")
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=False,
@@ -75,7 +75,14 @@ def update_area_web_access(self):
                 area = ocr.get_area(pdf_path)
                 if area is None:
                     continue
-                orders.at[index, "延床平米 OCR"] = area
+                orders.at[index, "延床平米 OCR"] = (
+                    area
+                    if wa.update(
+                        case=str(row["案件番号"]),
+                        area=str(area),
+                    )
+                    else f"Update Error ({area})"
+                )
             # --- Upload to Minio
             excel_buffer = io.BytesIO()
             orders.to_excel(excel_buffer, index=False, engine="openpyxl")
