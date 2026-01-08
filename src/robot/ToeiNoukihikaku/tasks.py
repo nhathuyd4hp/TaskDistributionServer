@@ -32,5 +32,5 @@ def KEIAI_ANKENKA(self):
         object_name=object_name,
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-    
+
     return result.object_name

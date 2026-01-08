@@ -99,7 +99,7 @@ class SharePoint:
                     self.logger.info(f"Logged in as: {currentAccount_primary} ({currentAccount_secondary})")
                     break
                 except TimeoutError:
-                    self.page.reload(wait_until="domcontentloaded")
+                    break
             return True
         except TimeoutError:
             self.logger.error("RETRY __authentication")
