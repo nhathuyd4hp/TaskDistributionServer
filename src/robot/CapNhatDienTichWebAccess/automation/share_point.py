@@ -65,7 +65,9 @@ class SharePoint:
                         selector="input[type='submit']",
                         has_text="Next",
                     ).click(timeout=self.timeout)
-                    self.page.wait_for_selector("input[type='password']", state="visible", timeout=10000).fill(self.password)
+                    self.page.wait_for_selector("input[type='password']", state="visible", timeout=10000).fill(
+                        self.password
+                    )
                     self.page.locator(
                         selector="input[type='submit']",
                         has_text="Sign in",
@@ -85,7 +87,9 @@ class SharePoint:
             while True:
                 try:
                     self.page.wait_for_selector("div[id='HeaderButtonRegion']", state="visible", timeout=10000)
-                    self.page.wait_for_selector(selector="div[id='O365_MainLink_MePhoto']", timeout=300, state="visible").click()
+                    self.page.wait_for_selector(
+                        selector="div[id='O365_MainLink_MePhoto']", timeout=300, state="visible"
+                    ).click()
                     currentAccount_primary = self.page.wait_for_selector(
                         selector="div[id='mectrl_currentAccount_primary']", timeout=300, state="visible"
                     ).text_content()
@@ -159,7 +163,9 @@ class SharePoint:
             for i in range(items.count()):
                 item: Locator = items.nth(i)
                 item.click(button="right")
-                download_btn = self.page.locator("button[data-automationid='downloadCommand'][role='menuitem']:not([type='button'])")
+                download_btn = self.page.locator(
+                    "button[data-automationid='downloadCommand'][role='menuitem']:not([type='button'])"
+                )
                 download_btn.wait_for(state="visible", timeout=self.timeout)
                 with self.page.expect_download() as download_info:
                     download_btn.click()
@@ -175,9 +181,14 @@ class SharePoint:
             return downloads
         except TimeoutError:
             if self.page.locator("div[id='ms-error-content']").count() == 1:
-                notification: str = self.page.locator("div[id='ms-error-content']").text_content().strip().split("\n")[0]
+                notification: str = (
+                    self.page.locator("div[id='ms-error-content']").text_content().strip().split("\n")[0]
+                )
                 self.logger.error(notification)
-                if notification == "このドキュメントにアクセスできません。このドキュメントを共有するユーザーに連絡してください。":
+                if (
+                    notification
+                    == "このドキュメントにアクセスできません。このドキュメントを共有するユーザーに連絡してください。"
+                ):
                     return []
             self.logger.error("RETRY download_files")
             return self.download_files(url, file, steps, save_to)

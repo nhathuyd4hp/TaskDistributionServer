@@ -426,7 +426,7 @@ def shiga_toyo_chiba(
                                     re.compile(
                                         rf"(?:{process_date.month}|{process_date.month:02d})月(?:{process_date.day}|{process_date.day:02d})日配送分"
                                     ),
-                                    re.compile(r"^確定データ\(.+\)$"),
+                                    re.compile(r"^確定データ(\(.*\))?"),
                                 ]
                             if not sp.upload(
                                 url="https://nskkogyo.sharepoint.com/sites/shiga/Shared Documents/Forms/AllItems.aspx?id=/sites/shiga/Shared Documents/滋賀工場 製造データ",  # noqa
@@ -453,7 +453,7 @@ def shiga_toyo_chiba(
                                     re.compile(
                                         rf"(?:{process_date.month}|{process_date.month:02d})月(?:{process_date.day}|{process_date.day:02d})日配送分"
                                     ),
-                                    re.compile(r"^確定データ\(.+\)$"),
+                                    re.compile(r"^確定データ(\(.*\))?"),
                                 ]
                             if not sp.upload(
                                 url="https://nskkogyo.sharepoint.com/sites/toyohashi/Shared Documents/Forms/AllItems.aspx?id=/sites/toyohashi/Shared Documents/豊橋工場 製造データ",  # noqa
@@ -480,7 +480,7 @@ def shiga_toyo_chiba(
                                     re.compile(
                                         rf"(?:{process_date.month}|{process_date.month:02d})月(?:{process_date.day}|{process_date.day:02d})日配送分"
                                     ),
-                                    re.compile(r"^確定データ\(.+\)$"),
+                                    re.compile(r"^確定データ(\(.*\))?"),
                                 ]
                             if not sp.upload(
                                 url="https://nskkogyo.sharepoint.com/sites/nskhome/Shared Documents/Forms/AllItems.aspx?id=/sites/nskhome/Shared Documents/千葉工場 製造データ",  # noqa

@@ -12,6 +12,7 @@ from pdf2image import convert_from_path
 from PIL import Image
 from transformers import AutoImageProcessor, TableTransformerForObjectDetection
 
+
 class OCR:
     def __init__(
         self,

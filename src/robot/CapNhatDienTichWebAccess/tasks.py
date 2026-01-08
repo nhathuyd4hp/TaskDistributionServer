@@ -1,17 +1,20 @@
-from src.core.config import settings
-from celery import shared_task
-from src.service import ResultService as minio
 import io
 import re
 import tempfile
+
+import pandas as pd
 import redis
+from celery import shared_task
+from playwright.sync_api import sync_playwright
+
+from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
-import pandas as pd
-from playwright.sync_api import sync_playwright
-from src.robot.CapNhatDienTichWebAccess.automation import OCR,SharePoint,WebAccess
+from src.robot.CapNhatDienTichWebAccess.automation import OCR, SharePoint, WebAccess
+from src.service import ResultService as minio
 
-@shared_task(bind=True, name = "Cập nhật diện tích WebAccess")
+
+@shared_task(bind=True, name="Cập nhật diện tích WebAccess")
 def update_area_web_access(self):
     logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     ocr = OCR(poppler_path="src/resource/bin", tesseract_path="src/resource/Tesseract/tesseract.exe")
@@ -42,13 +45,13 @@ def update_area_web_access(self):
             orders = orders[pd.isna(orders["延床平米"])].reset_index(drop=True)
         with (
             SharePoint(
-            domain="https://nskkogyo.sharepoint.com/",
-            email="hanh3@nskkogyo.onmicrosoft.com",
-            password="Got21095",
-            playwright=p,
-            logger=logger,
-            browser=browser,
-            context=context,
+                domain="https://nskkogyo.sharepoint.com/",
+                email="hanh3@nskkogyo.onmicrosoft.com",
+                password="Got21095",
+                playwright=p,
+                logger=logger,
+                browser=browser,
+                context=context,
             ) as sp,
             tempfile.TemporaryDirectory() as temp_dir,
         ):
@@ -83,6 +86,6 @@ def update_area_web_access(self):
                 object_name=f"CapNhatDienTich/{self.request.id}/{self.request.id}.xlsx",
                 data=excel_buffer,
                 length=excel_buffer.getbuffer().nbytes,
-                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
             return result.object_name

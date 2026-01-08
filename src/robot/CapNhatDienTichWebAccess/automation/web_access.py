@@ -7,6 +7,7 @@ import pandas as pd
 from playwright._impl._errors import TimeoutError
 from playwright.sync_api import sync_playwright
 
+
 class WebAccess:
     def __init__(
         self,
@@ -85,7 +86,9 @@ class WebAccess:
         self,
         building: str,
     ) -> pd.DataFrame:
-        self.logger.info(f"Download data: ビルダー名部分一致 = {building} | 図面 = ['作図済', '送付済', 'CBUP済', 'CB送付済', '図面確定']")
+        self.logger.info(
+            f"Download: ビルダー名部分一致 = {building} | 図面 = ['作図済', '送付済', 'CBUP済', 'CB送付済', '図面確定']"
+        )
         try:
             self.page.bring_to_front()
             with self.page.expect_navigation(wait_until="domcontentloaded"):
@@ -149,7 +152,9 @@ class WebAccess:
                 try:
                     with self.page.expect_navigation(wait_until="domcontentloaded"):
                         self.page.locator("button[id='order_update']").first.click()
-                    notification: str = self.page.locator("div[class='f-content'] > div[class='data']").text_content().strip()
+                    notification: str = (
+                        self.page.locator("div[class='f-content'] > div[class='data']").text_content().strip()
+                    )
                     self.logger.info(notification)
                     return True
                 except TimeoutError:
