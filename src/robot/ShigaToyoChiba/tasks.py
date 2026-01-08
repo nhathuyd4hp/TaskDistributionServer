@@ -263,6 +263,7 @@ def shiga_toyo_chiba(
                         url = row["資料リンク"]
                         breadcrumb = sp.get_breadcrumb(url)
                         if breadcrumb[-1].endswith("納材"):
+                            logger.warning("Tên folder có ghi ngày")
                             APIClient.write(
                                 siteId=DataShigaUp_SiteID,
                                 driveId=DataShigaUp_DriveID,
@@ -273,7 +274,7 @@ def shiga_toyo_chiba(
                             break
                         download_path = os.path.join(temp_dir, str(int(row["案件番号"])))
                         shutil.rmtree(download_path, ignore_errors=True)
-                        logger.info("Download data")
+                        logger.info("tải data")
                         downloads = sp.download(
                             url=url,
                             file=re.compile(r".*\.(xls|xlsx|xlsm|xlsb|xml|xlt|xltx|xltm|xlam|pdf)$", re.IGNORECASE),
@@ -281,6 +282,7 @@ def shiga_toyo_chiba(
                             save_to=download_path,
                         )
                         if not downloads:
+                            logger.warning("không đủ data")
                             APIClient.write(
                                 siteId=DataShigaUp_SiteID,
                                 driveId=DataShigaUp_DriveID,
