@@ -25,7 +25,7 @@ def Tama_Zumen_Soufu(self):
 
     result = minio.fput_object(
         bucket_name=settings.MINIO_BUCKET,
-        object_name=f"TamaZumenSoufu/{self.request.id}/{excel_filename}",
+        object_name=f"TamaZumenSoufu/{self.request.id}/TamaZumenSoufu.xlsx",
         file_path=str(excel_path),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
