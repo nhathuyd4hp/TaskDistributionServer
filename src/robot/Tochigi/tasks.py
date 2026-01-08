@@ -425,6 +425,8 @@ def tochigi(self, process_date: datetime | str):
                                 ):
                                     break
                                 time.sleep(0.5)
+                        shutil.rmtree(pdf_dir, ignore_errors=True)
+                        shutil.rmtree(excel_dir, ignore_errors=True)
                         break
                     break
 
