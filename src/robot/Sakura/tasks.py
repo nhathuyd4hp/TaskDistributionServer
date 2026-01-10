@@ -117,6 +117,7 @@ def main(
                     if found:
                         break
                 prices.append(price)
+                logger.info(f"{file}: {price}")
     # Process
     data["金額（税抜）"] = prices
     data["金額（税抜）"] = pd.to_numeric(data["金額（税抜）"], errors="coerce").fillna(0)
@@ -129,11 +130,11 @@ def main(
     data = pd.concat([data, pd.DataFrame([empty_row.to_dict(), append_row])], ignore_index=True)
     # Save
     excel_file = os.path.join(output, f"{datetime.today().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx")
+    logger.info("to_excel")
     data.to_excel(
         os.path.join(output, excel_file),
         index=False,
     )
-    logger.info("format file")
     app = None
     wb = None
     try:
@@ -216,8 +217,7 @@ def main(
     name="Sakura",
 )
 def Sakura(self):
-    TaskID = self.request.id
-    logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
+    logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     with tempfile.TemporaryDirectory() as temp_dir:
         pdfFile = main(
             output=temp_dir,
