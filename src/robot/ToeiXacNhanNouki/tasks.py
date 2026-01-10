@@ -282,7 +282,7 @@ def ToeiXacNhanNouki(self):
     excel_buffer.seek(0)
     result = minio.put_object(
         bucket_name=settings.MINIO_BUCKET,
-        object_name=f"ToeiXacNhanNouki/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx",
+        object_name=f"ToeiXacNhanNouki/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx",
         data=excel_buffer,
         length=excel_buffer.getbuffer().nbytes,
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
