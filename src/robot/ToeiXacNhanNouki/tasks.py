@@ -5,9 +5,12 @@ import logging
 import re
 
 import pandas as pd
+import redis
 from celery import shared_task
 
 from src.core.config import settings
+from src.core.logger import Log
+from src.core.redis import REDIS_POOL
 from src.robot.ToeiXacNhanNouki.automation import MailDealer, Touei, WebAccess
 from src.service import ResultService as minio
 
@@ -58,28 +61,31 @@ def process_schedu_email_content(content: str) -> list[str]:
     return buildings
 
 
-def run(timeout: int = 10, headless: bool = False):
-    logger = logging.getLogger("Main")
+def run(
+    timeout: int = 10,
+    headless: bool = False,
+    logger: logging.Logger = logging.getLogger("ToeiXacNhanNouki"),
+):
     touei = Touei(
         username=settings.TOUEI_USERNAME,
         password=settings.TOUEI_PASSWORD,
         headless=headless,
         timeout=timeout,
-        logger_name="Touei",
+        logger=logger,
     )
     web_access = WebAccess(
         username=settings.WEBACCESS_USERNAME,
         password=settings.WEBACCESS_PASSWORD,
         headless=headless,
         timeout=timeout,
-        logger_name="WebAccess",
+        logger=logger,
     )
     mail_dealer = MailDealer(
         username=settings.MAIL_DEALER_USERNAME,
         password=settings.MAIL_DEALER_PASSWORD,
         headless=headless,
         timeout=timeout,
-        logger_name="MailDealer",
+        logger=logger,
     )
     if not (mail_dealer.authenticated and touei.authenticated and web_access.authenticated):
         logger.error("❌ Kiểm tra thông tin xác thực")
@@ -265,7 +271,11 @@ def run(timeout: int = 10, headless: bool = False):
 
 @shared_task(bind=True, name="Toei Xác Nhận Nouki")
 def ToeiXacNhanNouki(self):
-    result = run(headless=False)
+    logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
+    result = run(
+        headless=False,
+        logger=logger,
+    )
     # --- Upload to Minio
     excel_buffer = io.BytesIO()
     result.to_excel(excel_buffer, index=False, engine="openpyxl")

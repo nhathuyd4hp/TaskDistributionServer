@@ -26,7 +26,12 @@ def style_to_day(style: str) -> int | None:
 
 class Touei:
     def __init__(
-        self, username: str, password: str, timeout: int = 10, headless: bool = False, logger_name: str = __name__
+        self,
+        username: str,
+        password: str,
+        timeout: int = 10,
+        headless: bool = False,
+        logger: logging.Logger = logging.getLogger("Touei"),
     ):
         options = webdriver.ChromeOptions()
         options.add_argument("--disable-notifications")
@@ -39,7 +44,7 @@ class Touei:
         options.add_argument("--incognito")
         options.add_experimental_option("excludeSwitches", ["enable-logging"])
         # Attribute
-        self.logger = logging.getLogger(logger_name)
+        self.logger = logger
         self.browser = webdriver.Chrome(options=options)
         self.browser.maximize_window()
         self.wait = WebDriverWait(self.browser, timeout)

@@ -19,7 +19,7 @@ class WebAccess:
         password: str,
         timeout: int = 10,
         headless: bool = False,
-        logger_name: str = __name__,
+        logger: logging.Logger = logging.getLogger("WebAccess"),
     ):
         options = webdriver.ChromeOptions()
         options.add_argument("--disable-notifications")
@@ -31,7 +31,7 @@ class WebAccess:
         options.add_argument("--silent")
         options.add_experimental_option("excludeSwitches", ["enable-logging"])
         # Attribute
-        self.logger = logging.getLogger(logger_name)
+        self.logger = logger
         self.browser = webdriver.Chrome(options=options)
         self.browser.maximize_window()
         self.wait = WebDriverWait(self.browser, timeout)
