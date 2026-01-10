@@ -108,6 +108,5 @@ class WebAccess:
                     orders = pd.read_csv(save_path)
                 os.remove(save_path)
                 return orders
-
         except TimeoutError:
             return self.download_orders(from_date, to_date, save_to)

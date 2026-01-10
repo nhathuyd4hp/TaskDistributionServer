@@ -1,7 +1,7 @@
-from contextlib import suppress
 import logging
 import os
 import re
+from contextlib import suppress
 from typing import List
 from urllib.parse import urlparse
 
@@ -52,7 +52,7 @@ class SharePoint:
         self.email = email
         self.password = password
         self.timeout = timeout
-        self.logger = logging.getLogger(logger)
+        self.logger = logger
         if not self.__authentication():
             raise PermissionError("Authentication failed")
 
@@ -66,7 +66,9 @@ class SharePoint:
                         selector="input[type='submit']",
                         has_text="Next",
                     ).click(timeout=self.timeout)
-                    self.page.wait_for_selector("input[type='password']", state="visible", timeout=10000).fill(self.password)
+                    self.page.wait_for_selector("input[type='password']", state="visible", timeout=10000).fill(
+                        self.password
+                    )
                     self.page.locator(
                         selector="input[type='submit']",
                         has_text="Sign in",
@@ -87,11 +89,21 @@ class SharePoint:
                 try:
                     self.page.wait_for_selector("div[id='HeaderButtonRegion']", state="visible", timeout=10000)
                     with suppress(TimeoutError):
-                        self.page.wait_for_selector(selector="div[id='O365_MainLink_MePhoto']", timeout=1000, state="visible").dblclick()
-                        self.page.wait_for_selector(selector="div[id='O365_MainLink_MePhoto']", timeout=1000, state="visible").dblclick()
-                        self.page.wait_for_selector(selector="div[id='O365_MainLink_MePhoto']", timeout=1000, state="visible").dblclick()
-                        self.page.wait_for_selector(selector="div[id='O365_MainLink_MePhoto']", timeout=1000, state="visible").dblclick()
-                        self.page.wait_for_selector(selector="div[id='O365_MainLink_MePhoto']", timeout=1000, state="visible").dblclick()
+                        self.page.wait_for_selector(
+                            selector="div[id='O365_MainLink_MePhoto']", timeout=1000, state="visible"
+                        ).dblclick()
+                        self.page.wait_for_selector(
+                            selector="div[id='O365_MainLink_MePhoto']", timeout=1000, state="visible"
+                        ).dblclick()
+                        self.page.wait_for_selector(
+                            selector="div[id='O365_MainLink_MePhoto']", timeout=1000, state="visible"
+                        ).dblclick()
+                        self.page.wait_for_selector(
+                            selector="div[id='O365_MainLink_MePhoto']", timeout=1000, state="visible"
+                        ).dblclick()
+                        self.page.wait_for_selector(
+                            selector="div[id='O365_MainLink_MePhoto']", timeout=1000, state="visible"
+                        ).dblclick()
                     currentAccount_primary = self.page.wait_for_selector(
                         selector="div[id='mectrl_currentAccount_primary']", timeout=1000, state="visible"
                     ).text_content()
@@ -158,10 +170,10 @@ class SharePoint:
                 self.page.locator(
                     selector="span[role='button'][data-id='heroField']",
                     has_text=file,
-                ).first.wait_for(timeout=5000,state="attached")
+                ).first.wait_for(timeout=5000, state="attached")
             self.page.locator(
                 selector="span[role='button'][data-id='heroField']",
-            ).first.wait_for(timeout=5000,state="visible")
+            ).first.wait_for(timeout=5000, state="visible")
             items: Locator = self.page.locator(
                 selector="span[role='button'][data-id='heroField']",
                 has_text=file,
@@ -170,7 +182,9 @@ class SharePoint:
                 item: Locator = items.nth(i)
                 # Download File
                 item.click(button="right")
-                download_btn = self.page.locator("button[data-automationid='downloadCommand'][role='menuitem']:not([type='button'])")
+                download_btn = self.page.locator(
+                    "button[data-automationid='downloadCommand'][role='menuitem']:not([type='button'])"
+                )
                 download_btn.wait_for(state="visible", timeout=self.timeout)
                 with self.page.expect_download() as download_info:
                     download_btn.click()
