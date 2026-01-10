@@ -53,10 +53,10 @@ class WebAccess:
         try:
             error_box = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[id='f-error-box']")))
             data = error_box.find_element(By.CSS_SELECTOR, "div[class='data']")
-            self.logger.info(f"❌ Xác thực thất bại!: {data.text}")
+            self.logger.info(f"Xác thực thất bại!: {data.text}")
             return False
         except TimeoutException:
-            self.logger.info("✅ Xác thực thành công!")
+            self.logger.info("Xác thực thành công!")
             return True
 
     def __switch_tab(self, tab: str) -> bool:
@@ -160,7 +160,7 @@ class WebAccess:
             try:
                 time.sleep(5)
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//td[text()='検索結果はありません']")))
-                self.logger.warning(f"❌ Construction:{construction_id} không có dữ liệu")
+                self.logger.warning(f"Construction:{construction_id} không có dữ liệu")
                 return pd.DataFrame(columns=fields)
             except TimeoutException:
                 time.sleep(1)
@@ -190,7 +190,7 @@ class WebAccess:
                     tds = tr.find_elements(By.TAG_NAME, "td")
                     row = [td.text for td in tds][1:]
                     df.loc[len(df)] = row
-                self.logger.info(f"✅ Lấy dữ liệu construction:{construction_id} thành công")
+                self.logger.info(f"Lấy dữ liệu construction:{construction_id} thành công")
                 return df
         except ElementClickInterceptedException:
             return self.get_information(

@@ -37,13 +37,10 @@ class Excel:
         visible: Any | None = None,
     ) -> Iterator[Tuple[str, pd.DataFrame]]:
         cls.logger.info(f"Read {return_type} {file_path}")
-        # ✅ Kiểm tra file tồn tại
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File Not Found: {file_path}")
-        # ✅ Kiểm tra phần mở rộng hợp lệ
         if os.path.splitext(file_path)[1].lower() not in cls.supported_file_extension:
             raise ValueError(f"Unsupported file extension: {file_path}")
-        # ✅ Khởi tạo Excel App an toàn
         app = None
         wb = None
         try:

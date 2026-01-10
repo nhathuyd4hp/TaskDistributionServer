@@ -22,7 +22,7 @@ def login_required(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         if not self.authenticated:
-            self.logger.error("❌ Yêu cầu xác thực")
+            self.logger.error("Yêu cầu xác thực")
             return []
         return func(self, *args, **kwargs)
 
@@ -109,16 +109,16 @@ class MailDealer:
                     ),
                 )
                 self.logger.error(
-                    "❌ Xác thực thất bại! Kiểm tra thông tin đăng nhập.",
+                    "Xác thực thất bại! Kiểm tra thông tin đăng nhập.",
                 )
                 return False
             except TimeoutException:
                 if self.browser.current_url.find("app") != -1:
-                    self.logger.info("✅ Xác thực thành công!")
+                    self.logger.info("Xác thực thành công!")
                     return True
                 return False
         except Exception as e:
-            self.logger.error(f"❌ Xác thực thất bại! {e}.")
+            self.logger.error(f"Xác thực thất bại! {e}.")
             return False
 
     @login_required
@@ -166,7 +166,7 @@ class MailDealer:
                     ),
                 ).click()
             except TimeoutException:
-                self.logger.error(f"❌ Không tìm thấy Tab {tab}")
+                self.logger.error(f"Không tìm thấy Tab {tab}")
                 return False
         self.browser.switch_to.default_content()
         return True
@@ -183,7 +183,7 @@ class MailDealer:
                     (By.CSS_SELECTOR, "iframe[id='ifmMain']"),
                 ),
             ):
-                self.logger.error("❌ Không thể tìm thấy Content Iframe!.")
+                self.logger.error("Không thể tìm thấy Content Iframe!.")
                 return None
             thead = self.wait.until(EC.presence_of_element_located((By.TAG_NAME, "thead")))
             labels = thead.find_elements(By.TAG_NAME, "th")
@@ -199,7 +199,7 @@ class MailDealer:
                 self.wait.until(
                     EC.presence_of_element_located((By.XPATH, "//div[text()='条件に一致するデータがありません。']"))
                 )
-                self.logger.info(f"✅ Hộp thư: {mail_box} rỗng")
+                self.logger.info(f"Hộp thư: {mail_box} rỗng")
                 return df
             except Exception:
                 tbodys = self.wait.until(EC.presence_of_all_elements_located((By.TAG_NAME, "tbody")))
@@ -210,7 +210,7 @@ class MailDealer:
                     for value in values:
                         row.append(value.text)
                     df.loc[len(df)] = row
-                self.logger.info(f"✅ Lấy hộp thư: {mail_box}, tab: {tab_name}: thành công")
+                self.logger.info(f"Lấy hộp thư: {mail_box}, tab: {tab_name}: thành công")
                 return df
         except StaleElementReferenceException:
             return self.mailbox(
@@ -223,7 +223,7 @@ class MailDealer:
                 tab_name=tab_name,
             )
         except Exception as e:
-            self.logger.error(f"❌ Không thể lấy được danh sách mail: {mail_box}, tab: {tab_name}: {e}")
+            self.logger.error(f"Không thể lấy được danh sách mail: {mail_box}, tab: {tab_name}: {e}")
             return None
 
     @login_required
@@ -255,10 +255,10 @@ class MailDealer:
                     EC.presence_of_element_located((By.CSS_SELECTOR, "div[class='olv-p-mail-view-body']"))
                 )
                 content = body.find_element(By.TAG_NAME, "pre").text
-            self.logger.info(f"✅ Đã đọc được nội dung mail:{mail_id}. tab: {tab_name} ở box:{mail_box}")
+            self.logger.info(f"Đã đọc được nội dung mail:{mail_id}. tab: {tab_name} ở box:{mail_box}")
             return content
         except Exception as e:
-            self.logger.error(f"❌ Dọc nội dung mail:{mail_id} ở {mail_box} thất bại: {e}")
+            self.logger.error(f"Dọc nội dung mail:{mail_id} ở {mail_box} thất bại: {e}")
 
     @login_required
     def 一括操作(self, 案件ID: any, このメールと同じ親番号のメールをすべて関連付ける: bool = False) -> tuple[bool, str]:
@@ -316,10 +316,10 @@ class MailDealer:
                 このメールと同じ親番号のメールをすべて関連付ける=このメールと同じ親番号のメールをすべて関連付ける,
             )
         except NoSuchElementException as e:
-            self.logger.error(f'❌ Liên kết {案件ID} thất bại: {e.msg.split("(Session info")[0].strip()}')
+            self.logger.error(f'Liên kết {案件ID} thất bại: {e.msg.split("(Session info")[0].strip()}')
             return False, e
         except Exception as e:
-            self.logger.error(f'❌ Liên kết {案件ID} thất bại: {e.msg.split("(Session info")[0].strip()}')
+            self.logger.error(f'Liên kết {案件ID} thất bại: {e.msg.split("(Session info")[0].strip()}')
             return False, e
 
 

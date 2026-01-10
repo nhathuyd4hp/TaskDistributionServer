@@ -88,7 +88,7 @@ def run(
         logger=logger,
     )
     if not (mail_dealer.authenticated and touei.authenticated and web_access.authenticated):
-        logger.error("❌ Kiểm tra thông tin xác thực")
+        logger.error("Kiểm tra thông tin xác thực")
         return
     mailbox: pd.DataFrame = mail_dealer.mailbox(
         mail_box=MAIL_BOX,

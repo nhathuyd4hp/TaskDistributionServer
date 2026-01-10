@@ -77,10 +77,10 @@ class Touei:
                 ),
             ).click()
             if not hasattr(self, "authenticated") or not self.authenticated:
-                self.logger.info("✅ Xác thực thành công!")
+                self.logger.info("Xác thực thành công!")
             return True
         except Exception as e:
-            self.logger.error(f"❌ Xác thực thất bại! {e}.")
+            self.logger.error(f"Xác thực thất bại! {e}.")
             return False
 
     def __switch_bar(self, bar: str) -> bool:
@@ -109,7 +109,7 @@ class Touei:
             # ----- #
             schedules: list[WebElement] = self.browser.find_elements(By.CSS_SELECTOR, "input[value='工程表']")
             if len(schedules) != 1:
-                self.logger.warning(f"❌ Không tìm thấy construction: {construction_id} hoặc tìm thấy nhiều hơn 1")
+                self.logger.warning(f"Không tìm thấy construction: {construction_id} hoặc tìm thấy nhiều hơn 1")
                 return None
             time.sleep(1)
             schedules[0].click()
@@ -148,10 +148,10 @@ class Touei:
             if schedule == {}:
                 self.logger.info(f"Không có task:{task} trong Construction:{construction_id}")
                 return None
-            self.logger.info(f"✅ Lấy lịch trình: {construction_id} task:{task} thành công!")
+            self.logger.info(f"Lấy lịch trình: {construction_id} task:{task} thành công!")
             return schedule
         except Exception as e:
-            self.logger.error(f"❌ Lấy lịch trình: {construction_id} task:{task} thất bại! {e}")
+            self.logger.error(f"Lấy lịch trình: {construction_id} task:{task} thất bại! {e}")
             return None
 
 

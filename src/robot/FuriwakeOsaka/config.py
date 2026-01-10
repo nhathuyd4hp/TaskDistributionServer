@@ -27,9 +27,9 @@ try:
     Webaccess_Data = create_json_config(WebAccess_config_url, ACCESS_TOKEN)
     Kizuku_Data = create_json_config(Kizuku_config_url, ACCESS_TOKEN)
     A1_Data = create_json_config(A1_config_url, ACCESS_TOKEN)
-    logging.info("✅ Configs loaded successfully.")
+    logging.info("Configs loaded successfully.")
 except Exception as e:
-    logging.error(f"❌ Failed to load configs: {e}")
+    logging.error(f"Failed to load configs: {e}")
 
 # 📚 Microsoft Graph API Credentials
 CLIENT_ID = settings.API_SHAREPOINT_CLIENT_ID
