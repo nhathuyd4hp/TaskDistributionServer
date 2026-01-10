@@ -61,8 +61,8 @@ def process_schedu_email_content(content: str) -> list[str]:
 def run(timeout: int = 10, headless: bool = False):
     logger = logging.getLogger("Main")
     touei = Touei(
-        username="c0032",
-        password="nsk159753",
+        username=settings.TOUEI_USERNAME,
+        password=settings.TOUEI_PASSWORD,
         headless=headless,
         timeout=timeout,
         logger_name="Touei",
