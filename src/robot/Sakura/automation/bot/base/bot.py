@@ -20,7 +20,7 @@ class IBot(ABC, metaclass=IBotMeta):
         keep_alive: bool = False,
         timeout: float = 5,
         retry_interval: float = 0.5,
-        log_name: str = __name__,
+        logger: logging.Logger = None,
     ):
         self.timeout = timeout
         self.retry_interval = retry_interval
@@ -37,7 +37,7 @@ class IBot(ABC, metaclass=IBotMeta):
             timeout=self.timeout,
             poll_frequency=self.retry_interval,
         )
-        self.logger = logging.getLogger(log_name)
+        self.logger = logger
         self.root_window = self.browser.window_handles[0]
         self.authenticated = False
         self.download_directory = self.options.experimental_options.get("prefs", {}).get(

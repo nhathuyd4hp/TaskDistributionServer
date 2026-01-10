@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import tempfile
@@ -5,6 +6,7 @@ from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 
 import pandas as pd
+import redis
 import xlwings as xw
 from celery import shared_task
 from selenium import webdriver
@@ -12,21 +14,10 @@ from xlwings.main import Sheet
 from xlwings.utils import col_name
 
 from src.core.config import settings
+from src.core.logger import Log
+from src.core.redis import REDIS_POOL
 from src.robot.Sakura.automation.bot import SharePoint, WebAccess
 from src.service import ResultService as minio
-
-
-def from_date_default() -> datetime:
-    now = datetime.now()
-    if now.month == 1:
-        return now.replace(year=now.year - 1, month=12, day=21)
-    return now.replace(month=now.month - 1, day=21)
-
-
-def to_date_default() -> datetime:
-    now = datetime.now()
-    return now.replace(day=20)
-
 
 # -- Chrome Options
 options = webdriver.ChromeOptions()
@@ -45,7 +36,10 @@ options.add_experimental_option(
 )
 
 
-def main(output: str):
+def main(
+    output: str,
+    logger: logging.Logger,
+):
     # From To
     to_date = datetime.now().replace(day=20)
     if to_date.month == 1:
@@ -54,14 +48,17 @@ def main(output: str):
         from_date = to_date.replace(month=to_date.month - 1, day=21)
     from_date = from_date.strftime("%Y/%m/%d")
     to_date = to_date.strftime("%Y/%m/%d")
+    logger.info(f"{from_date} ~ {to_date}")
     # Download
+    logger.info("login WebAccess")
     with WebAccess(
         url="https://webaccess.nsk-cad.com/",
-        username="hanh0704",
-        password="159753",
-        log_name="Web Access",
+        username=settings.WEBACCESS_USERNAME,
+        password=settings.WEBACCESS_PASSWORD,
+        logger=logger,
         options=options,
     ) as web_access:
+        logger.info("download data")
         data = web_access.get_order_list(
             building_name="009300",
             delivery_date=[from_date, to_date],
@@ -83,14 +80,16 @@ def main(output: str):
     # ---- Download files ----
     prices = []
     data = data[data["追加不足"] != "不足"]
+    logger.info("login sharepoint")
     with SharePoint(
         url="https://nskkogyo.sharepoint.com/",
         username="vietnamrpa@nskkogyo.onmicrosoft.com",
         password="Robot159753",
-        log_name="SharePoint",
+        logger=logger,
         options=options,
     ) as share_point:
         for url in data["資料リンク"]:
+            logger.info(url)
             downloads = share_point.download(
                 site_url=url,
                 file_pattern="(見積書|見積もり)/.*.(xlsm|xlsx|xls)$",
@@ -134,6 +133,7 @@ def main(output: str):
         os.path.join(output, excel_file),
         index=False,
     )
+    logger.info("format file")
     app = None
     wb = None
     try:
@@ -167,6 +167,7 @@ def main(output: str):
         sheet.api.PageSetup.Zoom = False
         sheet.api.PageSetup.FitToPagesWide = 1
         sheet.api.PageSetup.FitToPagesTall = 1
+        logger.info(f"export pdf: {pdfFile}")
         sheet.to_pdf(pdfFile)
     finally:
         if wb:
@@ -215,8 +216,13 @@ def main(output: str):
     name="Sakura",
 )
 def Sakura(self):
+    TaskID = self.request.id
+    logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     with tempfile.TemporaryDirectory() as temp_dir:
-        pdfFile = main(temp_dir)
+        pdfFile = main(
+            output=temp_dir,
+            logger=logger,
+        )
         result = minio.fput_object(
             bucket_name=settings.MINIO_BUCKET,
             object_name=f"Sakura/{self.request.id}/{os.path.basename(pdfFile)}",

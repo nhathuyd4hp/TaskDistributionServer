@@ -31,8 +31,8 @@ def update_area_web_access(self):
         )
         with WebAccess(
             domain="https://webaccess.nsk-cad.com/",
-            username="hanh0704",
-            password="159753",
+            username=settings.WEBACCESS_USERNAME,
+            password=settings.WEBACCESS_PASSWORD,
             playwright=p,
             logger=logger,
             browser=browser,
@@ -46,8 +46,8 @@ def update_area_web_access(self):
         with (
             SharePoint(
                 domain="https://nskkogyo.sharepoint.com/",
-                email="hanh3@nskkogyo.onmicrosoft.com",
-                password="Got21095",
+                email=settings.SHAREPOINT_EMAIL,
+                password=settings.SHAREPOINT_PASSWORD,
                 playwright=p,
                 logger=logger,
                 browser=browser,

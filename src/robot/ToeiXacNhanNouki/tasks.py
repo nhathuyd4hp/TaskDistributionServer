@@ -68,15 +68,15 @@ def run(timeout: int = 10, headless: bool = False):
         logger_name="Touei",
     )
     web_access = WebAccess(
-        username="hanh0704",
-        password="159753",
+        username=settings.WEBACCESS_USERNAME,
+        password=settings.WEBACCESS_PASSWORD,
         headless=headless,
         timeout=timeout,
         logger_name="WebAccess",
     )
     mail_dealer = MailDealer(
-        username="vietnamrpa",
-        password="nsk159753",
+        username=settings.MAIL_DEALER_USERNAME,
+        password=settings.MAIL_DEALER_PASSWORD,
         headless=headless,
         timeout=timeout,
         logger_name="MailDealer",

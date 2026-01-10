@@ -39,16 +39,16 @@ def main(self):
         with (
             MailDealer(
                 domain="https://mds3310.maildealer.jp/",
-                username="vietnamrpa",
-                password="nsk159753",
+                username=settings.MAIL_DEALER_USERNAME,
+                password=settings.MAIL_DEALER_PASSWORD,
                 playwright=p,
                 browser=browser,
                 context=context,
             ) as md,
             WebAccess(
                 domain="https://webaccess.nsk-cad.com/",
-                username="hanh0704",
-                password="159753",
+                username=settings.WEBACCESS_USERNAME,
+                password=settings.WEBACCESS_PASSWORD,
                 playwright=p,
                 browser=browser,
                 context=context,

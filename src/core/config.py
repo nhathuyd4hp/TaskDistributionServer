@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     # MAIL DEALER
     MAIL_DEALER_USERNAME: str
     MAIL_DEALER_PASSWORD: str
+    # TOUEI
+    TOUEI_USERNAME: str
+    TOUEI_PASSWORD: str
     # API SHAREPOINT
     API_SHAREPOINT_TENANT_ID: str
     API_SHAREPOINT_CLIENT_ID: str
