@@ -9,6 +9,7 @@ import redis
 from celery import shared_task
 from openpyxl import load_workbook
 from playwright.sync_api import sync_playwright
+
 from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL

@@ -3,21 +3,26 @@ import os
 import shutil
 import sys
 import time
+from pathlib import Path
 
 import requests
+from dotenv import load_dotenv
 from msal import ConfidentialClientApplication
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s  - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler(f"{'Access_token_log'}"), logging.StreamHandler()],
+    handlers=[logging.StreamHandler()],
 )
 logging.info("Access_token_log file created")
 
 # --- Microsoft Graph API Credentials ---
-CLIENT_ID = "033de5e1-a34c-44bf-bc08-8957eb61d7e3"
-CLIENT_SECRET = "vXj8Q~RKuGwBpgB2M6WySVn.yyyzlwCm0fpuJa3j"
-TENANT_ID = "3255306b-4eff-41c9-89fb-3e24e65f48a1"
+current_dir = Path(__file__).resolve().parent
+env_path = current_dir.parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
+CLIENT_ID = os.getenv("API_SHAREPOINT_CLIENT_ID")
+CLIENT_SECRET = os.getenv("API_SHAREPOINT_CLIENT_SECRET")
+TENANT_ID = os.getenv("API_SHAREPOINT_TENANT_ID")
 
 BASE_URL = "https://graph.microsoft.com/v1.0"
 GRAPH_SCOPE = ["https://graph.microsoft.com/.default"]

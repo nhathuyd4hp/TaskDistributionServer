@@ -1,10 +1,10 @@
 # config.py
 import logging
 import os
+from pathlib import Path
 
+from dotenv import load_dotenv
 from Nasiwak import create_json_config
-
-from src.core.config import settings
 
 # Replace with your actual file path
 file_path = os.path.join(os.getcwd(), "Access_token", "Access_token.txt")
@@ -32,9 +32,12 @@ except Exception as e:
     logging.error(f"Failed to load configs: {e}")
 
 # 📚 Microsoft Graph API Credentials
-CLIENT_ID = settings.API_SHAREPOINT_CLIENT_ID
-CLIENT_SECRET = settings.API_SHAREPOINT_CLIENT_SECRET
-TENANT_ID = settings.API_SHAREPOINT_TENANT_ID
+current_dir = Path(__file__).resolve().parent
+env_path = current_dir.parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
+CLIENT_ID = os.getenv("API_SHAREPOINT_CLIENT_ID")
+CLIENT_SECRET = os.getenv("API_SHAREPOINT_CLIENT_SECRET")
+TENANT_ID = os.getenv("API_SHAREPOINT_TENANT_ID")
 
 # 🌎 Microsoft Graph API URLs
 BASE_URL = "https://graph.microsoft.com/v1.0"
