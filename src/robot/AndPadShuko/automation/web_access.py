@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 
@@ -15,9 +16,11 @@ class WebAccess:
         context=None,
         browser=None,
         playwright=None,
+        logger: logging.Logger = logging.getLogger("WebAccess"),
         headless: bool = False,
         timeout: float = 5000,
     ):
+        self.logger = logger
         self._external_context = context is not None
         self._external_browser = browser is not None
         self._external_pw = playwright is not None
@@ -80,6 +83,7 @@ class WebAccess:
         self,
         案件名_物件名: str,
     ) -> pd.DataFrame:
+        self.logger.info(f"Download data: {案件名_物件名}")
         try:
             self.page.bring_to_front()
             with self.page.expect_navigation(wait_until="domcontentloaded"):

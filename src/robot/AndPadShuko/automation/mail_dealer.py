@@ -1,3 +1,4 @@
+import logging
 import time
 from contextlib import suppress
 
@@ -15,10 +16,11 @@ class MailDealer:
         context=None,
         browser=None,
         playwright=None,
-        log_name: str = "MailDealer",
+        logger: logging.Logger = logging.getLogger("MailDealer"),
         headless: bool = False,
         timeout: float = 5000,
     ):
+        self.logger = logger
         self._external_context = context is not None
         self._external_browser = browser is not None
         self._external_pw = playwright is not None
@@ -98,6 +100,9 @@ class MailDealer:
                 [Rows.nth(i).locator("td").nth(j).text_content() for j in range(Rows.nth(i).locator("td").count())]
                 for i in range(Rows.count())
             ]
+            if self.page.frame(name="main").locator("div[class='olv-p-maillist__no-data']").count() == 1:
+                self.logger.warning("条件に一致するデータがありません。")
+                return pd.DataFrame(columns=columns)
             data = pd.DataFrame(data=data, columns=columns)
             if not (data[" フォルダ "] == mailbox).all():
                 return self.mail_box(mailbox)
@@ -106,6 +111,7 @@ class MailDealer:
             return self.mail_box(mailbox)
 
     def update_mail(self, mail_id: str, label: str, fMatterID: str, comment: str | None = None) -> bool | str:
+        self.logger.info(f"Update mail: {mail_id}")
         try:
             self.page.bring_to_front()
             self.page.locator("input[name='fDQuery[B]']").clear()

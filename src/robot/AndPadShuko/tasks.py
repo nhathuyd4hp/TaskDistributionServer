@@ -44,6 +44,7 @@ def main(self):
                 playwright=p,
                 browser=browser,
                 context=context,
+                logger=logger,
             ) as md,
             WebAccess(
                 domain="https://webaccess.nsk-cad.com/",
@@ -52,6 +53,7 @@ def main(self):
                 playwright=p,
                 browser=browser,
                 context=context,
+                logger=logger,
             ) as wa,
         ):
             logger.info("Mail box: 専用アドレス・秀光ビルド")
