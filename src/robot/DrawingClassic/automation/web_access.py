@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import datetime, timedelta
 
 import pandas as pd
 from playwright._impl._errors import TimeoutError
@@ -49,7 +50,12 @@ class WebAccess:
             self.page.locator("a[class='fa fa-industry']").click()
             self.page.locator("button[class='search fa fa-eraser']").click()
 
+            (datetime.now() + timedelta(days=14)).strftime("%Y/%m/%d")
             self.page.locator("input[name='search_builder_name_like']").fill(building)
+            self.page.locator("input[name='search_fix_deliver_date_from']").fill(datetime.now().strftime("%Y/%m/%d"))
+            self.page.locator("input[name='search_fix_deliver_date_to']").fill(
+                (datetime.now() + timedelta(days=14)).strftime("%Y/%m/%d")
+            )
 
             self.page.locator("button[id='search_drawing_type_ms']").click()
             for drawing in ["送付済", "CB送付済"]:

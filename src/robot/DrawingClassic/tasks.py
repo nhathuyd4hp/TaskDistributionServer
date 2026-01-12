@@ -19,7 +19,9 @@ from src.service import ResultService as minio
     bind=True,
     name="Gửi tin nhắn xác nhận Classic",
 )
-def gui_ban_ve_xac_nhan_classic(self):
+def gui_ban_ve_xac_nhan_classic(
+    self,
+):
     logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     with (
         sync_playwright() as p,
@@ -92,9 +94,9 @@ def gui_ban_ve_xac_nhan_classic(self):
                     object_name=物件名,
                     message=f"""いつもお世話になっております。
 現場：{物件名}
-{"/".join(確定納期.split("/")[1:])} 倉庫入れ予定です。
+{"/".join(確定納期.split("/")[1:])}倉庫入れ予定です。
 上記の現場、まだ図面承認されていませんので、
-お手数をおかけしますが、至急ご確認お願い致します。
+お手数をおかけしますが、配送・製造段取りの為、 至急承認お願い致します。
 よろしくお願いいたします。
 """,
                     tags=["配送管理･追加発注(大前)", "林(拓) [資材課]", 担当2],
