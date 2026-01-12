@@ -1,10 +1,13 @@
 import shutil
 import subprocess
 from pathlib import Path
+
 from celery import shared_task
+
 from src.core.inactive_task import InactiveTask
 
-@shared_task(bind=True,name="Keiai Shiryou Koushin",base=InactiveTask)
+
+@shared_task(bind=True, name="Keiai Shiryou Koushin", base=InactiveTask)
 def keiai_shiryou_koushin(self):
     exe_path = Path(__file__).resolve().parents[2] / "robot" / "KeiaiShiryouKoushin" / "KISTAR_資料更新_V3.1.exe"
     cwd_path = exe_path.parent
