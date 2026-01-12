@@ -25,3 +25,4 @@ from src.robot.YokohamaNoukikakuninList import tasks  # noqa
 from src.robot.KeiaiShiryouKoushin import tasks  # noqa
 from src.robot.KeiaiZumenSoufu import tasks  # noqa
 from src.robot.ZumenSoufuKai import tasks  # noqa
+from src.robot.OsakaMitsumoriSoufu import tasks  # noqa

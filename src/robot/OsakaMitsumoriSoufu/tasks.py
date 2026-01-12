@@ -5,9 +5,11 @@ from pathlib import Path
 from celery import shared_task
 
 
-@shared_task(bind=True, name="Zumen Soufu Kai")
-def ZumenSoufuKai(self):
-    exe_path = Path(__file__).resolve().parents[2] / "robot" / "ZumenSoufuKai" / "Zumen_Soufu_Kai_V2.8.exe"
+@shared_task(bind=True, name="Osaka Mitsumori Soufu")
+def OsakaMitsumoriSoufu(self):
+    exe_path = (
+        Path(__file__).resolve().parents[2] / "robot" / "OsakaMitsumoriSoufu" / "「大阪・インド」見積書送付_V1.5.exe"
+    )
     cwd_path = exe_path.parent
 
     log_dir = Path(__file__).resolve().parents[3] / "logs"
@@ -18,13 +20,13 @@ def ZumenSoufuKai(self):
         process = subprocess.Popen([str(exe_path)], cwd=str(cwd_path), stdout=f, stderr=subprocess.STDOUT, text=True)
         process.wait()
     # Clean
-    log_file = cwd_path / "Access_token_log"
+    Access_token_log = cwd_path / "Access_token_log"
     try:
-        log_file.unlink()
+        Access_token_log.unlink()
     except Exception:
         pass
-
     logs_folder = cwd_path / "Logs"
     access_token_folder = cwd_path / "Access_token"
-    for path in (logs_folder, access_token_folder):
+    ankens_folder = cwd_path / "Ankens"
+    for path in (logs_folder, access_token_folder, ankens_folder):
         shutil.rmtree(path, ignore_errors=True)
