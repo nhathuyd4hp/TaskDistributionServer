@@ -4,6 +4,9 @@ from pathlib import Path
 
 from celery import shared_task
 
+from src.core.config import settings
+from src.service import ResultService as minio
+
 
 @shared_task(bind=True, name="Gửi Bản Vẽ Shuko")
 def GuiBanVeShuko(self):
@@ -42,3 +45,14 @@ def GuiBanVeShuko(self):
 
         except Exception as e:
             f.write(f"\n[CRITICAL ERROR] Python subprocess failed: {str(e)}\n")
+
+    xlsx_files = list(cwd_path.glob("*.xlsx"))
+    if xlsx_files:
+        latest_file = max(xlsx_files, key=lambda p: p.stat().st_mtime)
+        result = minio.fput_object(
+            bucket_name=settings.MINIO_BUCKET,
+            object_name=f"GuiBanVeShuko/{self.request.id}/{self.request.id}.xlsx",
+            file_path=str(latest_file),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        return result.object_name
