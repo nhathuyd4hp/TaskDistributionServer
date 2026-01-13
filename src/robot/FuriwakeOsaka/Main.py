@@ -1116,6 +1116,7 @@ class process:
             if result == "OK" and (arts["pdfs"] or arts["excels"]):
                 try:
                     self.号車 = go or "未指定"
+                    self.create_folder_and_move_matched_files(arts["pdfs"] + arts["excels"])
                 except Exception as e:
                     logging.error(f"Furiwake move error for '{bukken}': {e}")
 
