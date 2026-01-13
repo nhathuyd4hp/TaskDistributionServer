@@ -51,11 +51,11 @@ def FuriwakeOsaka(
     access_token_dir = exe_path.parent / "Access_token"
     配車表_dir = exe_path.parent / "配車表"
     USB_dir = exe_path.parent / "▽USB"
-    shutil.rmtree(bom_dir,ignore_errors=True)
-    shutil.rmtree(logs_dir,ignore_errors=True)
-    shutil.rmtree(access_token_dir,ignore_errors=True)
-    shutil.rmtree(配車表_dir,ignore_errors=True)
-    shutil.rmtree(USB_dir,ignore_errors=True)
+    shutil.rmtree(bom_dir, ignore_errors=True)
+    shutil.rmtree(logs_dir, ignore_errors=True)
+    shutil.rmtree(access_token_dir, ignore_errors=True)
+    shutil.rmtree(配車表_dir, ignore_errors=True)
+    shutil.rmtree(USB_dir, ignore_errors=True)
     # Upload result
     result_dir = exe_path.parent / "Results"
     files = [f for f in result_dir.iterdir() if f.is_file()]

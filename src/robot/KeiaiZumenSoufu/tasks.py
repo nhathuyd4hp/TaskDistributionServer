@@ -31,8 +31,9 @@ def keiai_zumen_soufu(self):
         pass
 
     logs_folder = cwd_path / "Access_token"
+    ankens_folder = cwd_path / "Ankens"
 
-    for path in [logs_folder]:
+    for path in [logs_folder, ankens_folder]:
         shutil.rmtree(path, ignore_errors=True)
 
     result_file = cwd_path / "Kizuku図面送付.xlsx"
