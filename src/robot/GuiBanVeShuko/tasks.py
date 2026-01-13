@@ -51,7 +51,7 @@ def GuiBanVeShuko(self):
         latest_file = max(xlsx_files, key=lambda p: p.stat().st_mtime)
         result = minio.fput_object(
             bucket_name=settings.MINIO_BUCKET,
-            object_name=f"GuiBanVeShuko/{self.request.id}/{self.request.id}.xlsx",
+            object_name=f"GuiBanVeShuko/{self.request.id}/GuiBanVeShuko.xlsx",
             file_path=str(latest_file),
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )

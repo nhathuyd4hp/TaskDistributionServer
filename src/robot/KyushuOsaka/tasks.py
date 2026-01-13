@@ -67,8 +67,6 @@ def Fname(path: str):
 @shared_task(
     bind=True,
     name="Kyushu Osaka",
-    soft_time_limit=55 * 60,
-    time_limit=60 * 60,
 )
 def kyushu_osaka(
     self,

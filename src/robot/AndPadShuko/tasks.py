@@ -19,8 +19,6 @@ from src.service import ResultService as minio
 @shared_task(
     bind=True,
     name="AndPad Shuko",
-    soft_time_limit=25 * 60,
-    time_limit=30 * 60,
 )
 def main(self):
     logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
