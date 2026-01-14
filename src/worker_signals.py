@@ -1,3 +1,5 @@
+import traceback
+
 import redis
 from celery import signals
 from celery.result import AsyncResult
@@ -19,6 +21,9 @@ def start_up(sender: Consumer, **kwargs):
             result = AsyncResult(id=record.id, app=sender.app)
             if result.state == "PENDING":
                 record.status = Status.CANCEL
+                session.add(record)
+            if result.state == "FAILURE":
+                record.status = Status.FAILURE
                 session.add(record)
         session.commit()
 
@@ -60,13 +65,24 @@ def task_success_handler(sender=None, result=None, **kwargs):
 
 @signals.task_failure.connect
 def task_failure_handler(sender=None, exception=None, **kwargs):
+    tb = exception.__traceback__
+    last = traceback.extract_tb(tb)[-1]
     with Session(settings.db_engine) as session:
         statement = select(Runs).where(Runs.id == sender.request.id)
         record = session.exec(statement).one_or_none()
         if not record:
             return
         record.status = Status.FAILURE
-        record.result = str(exception)
+        record.result = (
+            (
+                f"Error: {type(exception).__name__}\n"
+                f"Function: {last.name}\n"
+                f"Filename: {last.filename}\n"
+                f"Lineno: {last.lineno}"
+            )
+            if exception
+            else ""
+        )
         session.add(record)
         session.commit()
         redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", f"{record.robot} có lỗi")
