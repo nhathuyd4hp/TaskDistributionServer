@@ -559,7 +559,7 @@ class App(tk.Tk):
         to_label.place(relx=0.3, rely=0.5, anchor=CENTER)
         self.to_date_entry = DateEntry(self, date_pattern="yyyy/mm/dd")  # Initialize to_date_entry properly
         self.to_date_entry.place(relx=0.5, rely=0.5, anchor=CENTER)
-        self.from_date_entry.set_date(self.to_date)
+        self.to_date_entry.set_date(self.to_date)
 
         start_button = Button(text="Start Bot", command=self.start_script, bg="#3290db", fg="white")
         start_button.place(relx=0.5, rely=0.6, anchor=CENTER)
