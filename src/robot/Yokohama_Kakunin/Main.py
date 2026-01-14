@@ -35,7 +35,7 @@ setup_logging()
 # Set the locale to Japanese
 locale.setlocale(locale.LC_ALL, 'ja_JP.UTF-8')
 
-from config_access_token import token_file
+from config_access_token import token_file # noqa
 # Replace with your actual file path
 file_path = os.path.join(os.getcwd(), "Access_token", "Access_token.txt")
 # logging.info(f"file path for text file is: {file_path}")
