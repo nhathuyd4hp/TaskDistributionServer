@@ -1,4 +1,5 @@
 import subprocess
+import sys
 from pathlib import Path
 
 from celery import shared_task
@@ -9,7 +10,7 @@ from src.service import ResultService as minio
 
 @shared_task(bind=True, name="Tama Ankenka")
 def Tama_Ankenka(self):
-    exe_path = Path(__file__).resolve().parents[2] / "robot" / "TamaAnkenka" / "タマホーム_案件化+資料UP_V1_2.exe"
+    exe_path = Path(__file__).resolve().parents[2] / "robot" / "TamaAnkenka" / "タマホーム_案件化+資料UP_V1_2.py"
 
     log_dir = Path(__file__).resolve().parents[3] / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -18,7 +19,15 @@ def Tama_Ankenka(self):
 
     with open(log_file, "w", encoding="utf-8", errors="ignore") as f:
         process = subprocess.Popen(
-            [str(exe_path)], cwd=str(exe_path.parent), stdout=f, stderr=subprocess.STDOUT, text=True
+            [
+                sys.executable,
+                str(exe_path),
+            ],
+            cwd=str(exe_path.parent),
+            stdout=f,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
         )
         process.wait()
 
@@ -30,6 +39,7 @@ def Tama_Ankenka(self):
         file_path=str(file_path),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-    file_path.unlink()
+
+    file_path.unlink(missing_ok=True)
 
     return result.object_name
