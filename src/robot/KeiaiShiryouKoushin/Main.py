@@ -842,8 +842,8 @@ class App(tk.Tk):
     def __init__(
         self,
         task_id: str,
-        from_date: str,  # Format: yyyy/mm/dd hh:mm:ss.fff
-        to_date: str,  # Format: yyyy/mm/dd hh:mm:ss.fff
+        from_date: str,  # Format: yyyy-mm-dd hh:mm:ss.ffffff
+        to_date: str,  # Format: yyyy-mm-dd hh:mm:ss.ffffff
     ):
         # ---- Convert Str to Datetime #
         self.from_date = datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S.%f")

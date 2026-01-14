@@ -21,7 +21,7 @@ from src.robot.ToeiXacNhanNouki import tasks  # noqa
 from src.robot.CapNhatDienTichWebAccess import tasks  # noqa
 from src.robot.MejiIrisumiCheck import tasks  # noqa
 from src.robot.ShukoTaoSo import tasks  # noqa
-from src.robot.YokohamaNoukikakuninList import tasks  # noqa
+from src.robot.Yokohama_Kakunin import tasks  # noqa
 from src.robot.KeiaiShiryouKoushin import tasks  # noqa
 from src.robot.KeiaiZumenSoufu import tasks  # noqa
 from src.robot.ZumenSoufuKai import tasks  # noqa
