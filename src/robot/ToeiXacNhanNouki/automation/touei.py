@@ -4,7 +4,7 @@ import time
 from datetime import datetime, timedelta
 
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import ElementClickInterceptedException, NoSuchElementException
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
@@ -150,6 +150,11 @@ class Touei:
                 return None
             self.logger.info(f"Lấy lịch trình: {construction_id} task:{task} thành công!")
             return schedule
+        except ElementClickInterceptedException:
+            return self.get_schedule(
+                construction_id=construction_id,
+                task=task,
+            )
         except Exception as e:
             self.logger.error(f"Lấy lịch trình: {construction_id} task:{task} thất bại! {e}")
             return None

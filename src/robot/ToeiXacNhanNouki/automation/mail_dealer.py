@@ -217,6 +217,11 @@ class MailDealer:
                 mail_box=mail_box,
                 tab_name=tab_name,
             )
+        except ElementClickInterceptedException:
+            return self.mailbox(
+                mail_box=mail_box,
+                tab_name=tab_name,
+            )
         except ValueError:
             return self.mailbox(
                 mail_box=mail_box,
@@ -257,8 +262,14 @@ class MailDealer:
                 content = body.find_element(By.TAG_NAME, "pre").text
             self.logger.info(f"Đã đọc được nội dung mail:{mail_id}. tab: {tab_name} ở box:{mail_box}")
             return content
+        except ElementClickInterceptedException:
+            return self.read_mail(
+                mail_box=mail_box,
+                mail_id=mail_id,
+                tab_name=tab_name,
+            )
         except Exception as e:
-            self.logger.error(f"Dọc nội dung mail:{mail_id} ở {mail_box} thất bại: {e}")
+            self.logger.error(f"Đọc nội dung mail:{mail_id} ở {mail_box} thất bại: {e}")
 
     @login_required
     def 一括操作(self, 案件ID: any, このメールと同じ親番号のメールをすべて関連付ける: bool = False) -> tuple[bool, str]:
