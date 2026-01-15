@@ -375,7 +375,7 @@ def tochigi(self, process_date: datetime | str):
                             )
                         macro_data.index = macro_data.index + 1
                         macro_data.columns = [get_column_letter(i + 1) for i in range(macro_data.shape[1])]
-                        result = set(macro_data["G"][2:])
+                        result = set(macro_data["H"][2:])
                         result = {x for x in result if pd.notna(x)}
                         logger.info(f"Macro result: {result}")
                         if result != {"OK"}:
