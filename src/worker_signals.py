@@ -37,16 +37,20 @@ def task_prerun_handler(sender=None, task_id=None, **kwargs):
             record.status = Status.PENDING
             session.add(record)
         else:
-            session.add(
-                Runs(
-                    id=task_id,
-                    robot=sender.name,
-                    parameters=kwargs.get("kwargs") if kwargs.get("kwargs") else None,
-                    status=Status.PENDING,
-                )
+            record = Runs(
+                id=task_id,
+                robot=sender.name,
+                parameters=kwargs.get("kwargs") if kwargs.get("kwargs") else None,
+                status=Status.PENDING,
             )
+            session.add(record)
         session.commit()
-        redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", f"{sender.name} bắt đầu")
+        message = f"""\n
+{record.robot} bắt đầu
+----------------------
+ID: {record.id}
+"""
+        redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", message)
 
 
 @signals.task_success.connect
@@ -60,7 +64,12 @@ def task_success_handler(sender=None, result=None, **kwargs):
         record.result = "" if result is None else str(result)
         session.add(record)
         session.commit()
-        redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", f"{record.robot} hoàn thành")
+        message = f"""\n
+{record.robot} hoàn thành
+-------------------------
+ID: {record.id}
+"""
+        redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", message)
 
 
 @signals.task_failure.connect
@@ -85,4 +94,9 @@ def task_failure_handler(sender=None, exception=None, **kwargs):
         )
         session.add(record)
         session.commit()
-        redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", f"{record.robot} có lỗi")
+        message = f"""\n
+{record.robot} thất bại
+-----------------------
+ID: {record.id}
+"""
+        redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", message)
