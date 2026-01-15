@@ -25,9 +25,7 @@ class SharePoint(IBot):
             raise ConnectionRefusedError("The username or password is incorrect.")
 
     def navigate(self, url, wait_for_complete=True):
-        self.browser.execute_script("window.location.href = arguments[0];", url)
-        if wait_for_complete:
-            self.wait.until(lambda d: url in d.current_url)
+        super().navigate(url, wait_for_complete)
         try:
             ms_error_header = self.wait.until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, "div[id='ms-error-header']"))
