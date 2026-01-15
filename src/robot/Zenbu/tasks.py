@@ -1,11 +1,15 @@
 import shutil
 from celery import shared_task
+import io
 from pathlib import Path
 import subprocess
 import sys
 
 @shared_task(bind=True,name="Zenbu")
-def Zenbu(self):
+def Zenbu(
+    self,
+    file: io.BytesIO | str = "Zenbu", 
+):
     log_dir = Path(__file__).resolve().parents[3] / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / f"{self.request.id}.log"
