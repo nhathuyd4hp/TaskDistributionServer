@@ -1,23 +1,23 @@
-import shutil
-from celery import shared_task
 import io
-from pathlib import Path
+import shutil
 import subprocess
 import sys
+from pathlib import Path
 
-@shared_task(bind=True,name="Zenbu")
+from celery import shared_task
+
+
+@shared_task(bind=True, name="Zenbu")
 def Zenbu(
     self,
-    file: io.BytesIO | str = "Zenbu", 
+    file: io.BytesIO | str = "Zenbu",
 ):
     log_dir = Path(__file__).resolve().parents[3] / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / f"{self.request.id}.log"
 
-    exe_path = (
-        Path(__file__).resolve().parents[2] / "robot" / "Zenbu" / "Main.py"
-    )
-    
+    exe_path = Path(__file__).resolve().parents[2] / "robot" / "Zenbu" / "Main.py"
+
     with open(log_file, "w", encoding="utf-8", errors="ignore") as f:
         process = subprocess.Popen(
             [
@@ -37,7 +37,7 @@ def Zenbu(
         exe_path.parent / "Logs",
         exe_path.parent / "Access_token_log",
     ]
-    
+
     for p in paths:
         try:
             if p.is_file():

@@ -1,9 +1,8 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from minio.error import S3Error
 from sqlalchemy.exc import ProgrammingError
 from starlette.middleware.base import BaseHTTPMiddleware
-
-from minio.error import S3Error
 
 
 class GlobalExceptionMiddleware(BaseHTTPMiddleware):

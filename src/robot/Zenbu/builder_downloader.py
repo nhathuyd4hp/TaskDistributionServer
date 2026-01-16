@@ -1,8 +1,10 @@
-import os
 import logging
+import os
+
 import requests
 from config import BASE_URL
 from Token_Manager import get_access_token
+
 
 class Builder_SharePoint_GraphAPI:
     def __init__(self, builder_file_name, local_folder_path):
@@ -14,19 +16,12 @@ class Builder_SharePoint_GraphAPI:
         """
         Search the builder file by name and return driveId and id.
         """
-        headers = {
-            "Authorization": f"Bearer {get_access_token()}",
-            "Content-Type": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {get_access_token()}", "Content-Type": "application/json"}
 
         search_url = f"{BASE_URL}/search/query"
         payload = {
             "requests": [
-                {
-                    "entityTypes": ["driveItem"],
-                    "query": {"queryString": self.builder_file_name},
-                    "region": "JPN"
-                }
+                {"entityTypes": ["driveItem"], "query": {"queryString": self.builder_file_name}, "region": "JPN"}
             ]
         }
 
@@ -50,9 +45,7 @@ class Builder_SharePoint_GraphAPI:
         """
         After search, fetch full metadata to get download URL.
         """
-        headers = {
-            "Authorization": f"Bearer {get_access_token()}"
-        }
+        headers = {"Authorization": f"Bearer {get_access_token()}"}
         file_url = f"{BASE_URL}/drives/{drive_id}/items/{file_id}"
         resp = requests.get(file_url, headers=headers)
 

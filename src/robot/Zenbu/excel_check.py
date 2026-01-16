@@ -1,22 +1,20 @@
 # --- excel_check.py ---
-import re
-import os
-import time
 import logging
-import pandas as pd
-import xlwings as xw
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.action_chains import ActionChains
+import os
+import re
+import time
 
-from Nasiwak import create_driver, Webaccess, create_json_config
-from graph_downloader import download_folder_by_anken
+import xlwings as xw
 from builder_downloader import Builder_SharePoint_GraphAPI
-from logging_setup import setup_logging
+from config_access_token import token_file  # noqa
 from excel_conditions import ExcelConditionApplier
-from config_access_token import token_file # noqa
+from graph_downloader import download_folder_by_anken
+from logging_setup import setup_logging
+from Nasiwak import Webaccess, create_driver, create_json_config
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+
 # Replace with your actual file path
 file_path = os.path.join(os.getcwd(), "Access_token", "Access_token.txt")
 logging.info(f"file path for text file is: {file_path}")
@@ -32,6 +30,7 @@ WEBACCESS_JSON_URL = "https://raw.githubusercontent.com/Nasiwak/Nasiwak-jsons/re
 
 # 🚀 Setup Logging
 setup_logging()
+
 
 class Excel_check:
 
@@ -57,23 +56,51 @@ class Excel_check:
             driver = self.driver
             driver.switch_to.window(driver.window_handles[0])
 
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, self.webaccess_config["xpaths"]["受注一覧"])))
-            WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧"]))).click()
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, self.webaccess_config["xpaths"]["受注一覧"]))
+            )
+            WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧"]))
+            ).click()
 
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["リセット"])))
-            WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["リセット"]))).click()
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located(
+                    (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["リセット"])
+                )
+            )
+            WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["リセット"]))
+            ).click()
 
             driver.execute_script("scroll(0, 0);")
 
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["確定納品日_1"])))
-            WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["確定納品日_1"]))).clear()
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located(
+                    (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["確定納品日_1"])
+                )
+            )
+            WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["確定納品日_1"])
+                )
+            ).clear()
 
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["案件番号"])))
-            WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["案件番号"]))).send_keys(self.bango)
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located(
+                    (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["案件番号"])
+                )
+            )
+            WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["案件番号"]))
+            ).send_keys(self.bango)
             logging.info(f"🔍 Searching for {self.bango}")
 
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["検索"])))
-            WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["検索"]))).click()
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["検索"]))
+            )
+            WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["検索"]))
+            ).click()
             logging.info(f"✅ Search completed for {self.bango}")
             time.sleep(3)
 
@@ -97,7 +124,7 @@ class Excel_check:
             #         last_height = new_height
             # except Exception as e:
             #     logging.info(f"⚠️ Table scroll failed: {e}")
-            
+
             time.sleep(2)
 
             # Ensure the row is loaded
@@ -107,44 +134,120 @@ class Excel_check:
 
             # Column map: adjust based on exact DOM inspection
             self.Builder_name = cells[8].text.strip()  # Builder
-            self.Address = cells[20].text.strip()       # Address
-            self.shinki_status = cells[13].text.strip() # Status
+            self.Address = cells[20].text.strip()  # Address
+            self.shinki_status = cells[13].text.strip()  # Status
 
             logging.info(f"✅ Builder: {self.Builder_name}")
             logging.info(f"✅ Address: {self.Address}")
             logging.info(f"✅ Status: {self.shinki_status}")
 
             if self.shinki_status == "新規":
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_目地1"])))
-                self.目地 = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_目地1"]))).text or '0'
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located(
+                        (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_目地1"])
+                    )
+                )
+                self.目地 = (
+                    WebDriverWait(driver, 10)
+                    .until(
+                        EC.element_to_be_clickable(
+                            (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_目地1"])
+                        )
+                    )
+                    .text
+                    or "0"
+                )
                 logging.info(f"✅ 目地: {self.目地}")
 
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_入隅1"])))
-                self.入隅 = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_入隅1"]))).text or '0'
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located(
+                        (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_入隅1"])
+                    )
+                )
+                self.入隅 = (
+                    WebDriverWait(driver, 10)
+                    .until(
+                        EC.element_to_be_clickable(
+                            (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_入隅1"])
+                        )
+                    )
+                    .text
+                    or "0"
+                )
                 logging.info(f"✅ 入隅: {self.入隅}")
 
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_配送時特記事項1"])))
-                self.配送時特記事項 = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_配送時特記事項1"]))).text
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located(
+                        (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_配送時特記事項1"])
+                    )
+                )
+                self.配送時特記事項 = (
+                    WebDriverWait(driver, 10)
+                    .until(
+                        EC.element_to_be_clickable(
+                            (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_配送時特記事項1"])
+                        )
+                    )
+                    .text
+                )
                 logging.info(f"✅ 配送時特記事項1: {self.配送時特記事項}")
 
             elif self.shinki_status == "先行":
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_目地2"])))
-                self.目地 = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_目地2"]))).text or '0'
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located(
+                        (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_目地2"])
+                    )
+                )
+                self.目地 = (
+                    WebDriverWait(driver, 10)
+                    .until(
+                        EC.element_to_be_clickable(
+                            (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_目地2"])
+                        )
+                    )
+                    .text
+                    or "0"
+                )
                 logging.info(f"✅ 新規目地: {self.目地}")
 
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_入隅2"])))
-                self.入隅 = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_入隅2"]))).text or '0'
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located(
+                        (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_入隅2"])
+                    )
+                )
+                self.入隅 = (
+                    WebDriverWait(driver, 10)
+                    .until(
+                        EC.element_to_be_clickable(
+                            (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_入隅2"])
+                        )
+                    )
+                    .text
+                    or "0"
+                )
                 logging.info(f"✅ 新規入隅: {self.入隅}")
 
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_配送時特記事項2"])))
-                self.配送時特記事項 = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_配送時特記事項2"]))).text
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located(
+                        (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_配送時特記事項2"])
+                    )
+                )
+                self.配送時特記事項 = (
+                    WebDriverWait(driver, 10)
+                    .until(
+                        EC.element_to_be_clickable(
+                            (By.XPATH, self.webaccess_config["xpaths"]["受注一覧_xpaths"]["参照_配送時特記事項2"])
+                        )
+                    )
+                    .text
+                )
                 logging.info(f"✅ 配送時特記事項2: {self.配送時特記事項}")
 
             if str(self.builder_id).strip() == "022001":
                 ad_translation = {
                     "大阪工場引取 本社": "引取 (本社)",
                     "大阪工場引取 高槻倉庫": "引取 (高槻倉庫)",
-                    "大阪工場引取 西宮倉庫": "引取 (西宮倉庫)"
+                    "大阪工場引取 西宮倉庫": "引取 (西宮倉庫)",
                 }
                 matched = False
                 for key in ad_translation.keys():
@@ -159,7 +262,7 @@ class Excel_check:
 
         except Exception as e:
             logging.warning(f"⚠️ Error fetching data: {e}")
-            raise Exception("Skip to next 案件")
+            raise Exception("Skip to next 案件") from e
 
     def extract_files(self, id, builder_id):
         folder_path = os.path.join(os.getcwd(), "Ankens", f"{self.builder_id} {self.Builder_name}", id)
@@ -185,24 +288,62 @@ class Excel_check:
         except Exception as e:
             logging.warning(f"⚠️ Could not download folder: {e}")
             self.delete_folder(id)
-            raise Exception("Skip to next 案件")
-        
+            raise Exception("Skip to next 案件") from e
+
         excel_files = [
-                f for f in os.listdir(folder_path)
-                if f.endswith('.xls') and (
-                    f.endswith((
-                        '階.xls', '屋.xls', 'のみ.xls',
-                        '1).xls', '2).xls', '3).xls', '4).xls', '5).xls', '6).xls', '7).xls', '8).xls', '9).xls',
-                        '①.xls', '②.xls', '③.xls', '④.xls', '⑤.xls', '⑥.xls', '⑦.xls', '⑧.xls', '⑨.xls', '⑩.xls',
-                        '⑪.xls', '⑫.xls', '⑬.xls', '⑭.xls', '⑮.xls',
-                        '小物.xls', '原本.xls','(A).xls', '(B).xls', '(C).xls', '(D).xls', '(E).xls', '(F).xls', '(G).xls', '(H).xls', '(I).xls',
-                    )) or re.search(r"\(\d{3}\)\.xls$", f)
+            f
+            for f in os.listdir(folder_path)
+            if f.endswith(".xls")
+            and (
+                f.endswith(
+                    (
+                        "階.xls",
+                        "屋.xls",
+                        "のみ.xls",
+                        "1).xls",
+                        "2).xls",
+                        "3).xls",
+                        "4).xls",
+                        "5).xls",
+                        "6).xls",
+                        "7).xls",
+                        "8).xls",
+                        "9).xls",
+                        "①.xls",
+                        "②.xls",
+                        "③.xls",
+                        "④.xls",
+                        "⑤.xls",
+                        "⑥.xls",
+                        "⑦.xls",
+                        "⑧.xls",
+                        "⑨.xls",
+                        "⑩.xls",
+                        "⑪.xls",
+                        "⑫.xls",
+                        "⑬.xls",
+                        "⑭.xls",
+                        "⑮.xls",
+                        "小物.xls",
+                        "原本.xls",
+                        "(A).xls",
+                        "(B).xls",
+                        "(C).xls",
+                        "(D).xls",
+                        "(E).xls",
+                        "(F).xls",
+                        "(G).xls",
+                        "(H).xls",
+                        "(I).xls",
+                    )
                 )
-            ]
+                or re.search(r"\(\d{3}\)\.xls$", f)
+            )
+        ]
         logging.debug(f"✅ Matched Excel files: {excel_files}")
-        
+
         if not excel_files:
-            logging.warning('⚠️ No Excel files found inside folder')
+            logging.warning("⚠️ No Excel files found inside folder")
             return
 
         if self.previous_builder_id != self.builder_id:
@@ -211,7 +352,7 @@ class Excel_check:
 
         self.builder_copy(id)
 
-    def detect_max_floor_for_builder_copy(self, excel_files):        
+    def detect_max_floor_for_builder_copy(self, excel_files):
         # Pick highest floor number
         if any("3階" in name for name in excel_files):
             return 3
@@ -224,10 +365,7 @@ class Excel_check:
     def builder_id_drive(self):
         destination_folder = os.path.join(os.getcwd(), "Ankens", f"{self.builder_id} {self.Builder_name}")
         os.makedirs(destination_folder, exist_ok=True)
-        Builder_SharePoint_GraphAPI(
-            builder_file_name=f"{self.builder_id}.xlsx",
-            local_folder_path=destination_folder
-        )
+        Builder_SharePoint_GraphAPI(builder_file_name=f"{self.builder_id}.xlsx", local_folder_path=destination_folder)
         logging.info(f"✅ Builder Excel {self.builder_id}.xlsx downloaded")
 
     def builder_copy(self, id):
@@ -236,19 +374,47 @@ class Excel_check:
             excel_folder = os.path.join("Ankens", f"{self.builder_id} {self.Builder_name}", id)
             source_wb_path = os.path.join("Ankens", f"{self.builder_id} {self.Builder_name}", f"{self.builder_id}.xlsx")
             source_wb = app.books.open(source_wb_path)
-            
 
             # excel_files = [f for f in os.listdir(excel_folder) if f.endswith(('階.xls', '屋.xls', 'のみ.xls', '1).xls', '2).xls', '3).xls', '4).xls', '5).xls', '6).xls', '7).xls', '8).xls', '9).xls', '①.xls', '②.xls', '③.xls', '④.xls', '⑤.xls', '⑥.xls', '⑦.xls', '⑧.xls', '⑨.xls', '⑩.xls', '⑪.xls', '⑫.xls', '⑬.xls', '⑭.xls', '⑮.xls', '小物.xls', '原本.xls'))]
             excel_files = [
-                f for f in os.listdir(excel_folder)
-                if f.endswith('.xls') and (
-                    f.endswith((
-                        '階.xls', '屋.xls', 'のみ.xls',
-                        '1).xls', '2).xls', '3).xls', '4).xls', '5).xls', '6).xls', '7).xls', '8).xls', '9).xls',
-                        '①.xls', '②.xls', '③.xls', '④.xls', '⑤.xls', '⑥.xls', '⑦.xls', '⑧.xls', '⑨.xls', '⑩.xls',
-                        '⑪.xls', '⑫.xls', '⑬.xls', '⑭.xls', '⑮.xls',
-                        '小物.xls', '原本.xls'
-                    )) or re.search(r"\(\d{3}\)\.xls$", f)
+                f
+                for f in os.listdir(excel_folder)
+                if f.endswith(".xls")
+                and (
+                    f.endswith(
+                        (
+                            "階.xls",
+                            "屋.xls",
+                            "のみ.xls",
+                            "1).xls",
+                            "2).xls",
+                            "3).xls",
+                            "4).xls",
+                            "5).xls",
+                            "6).xls",
+                            "7).xls",
+                            "8).xls",
+                            "9).xls",
+                            "①.xls",
+                            "②.xls",
+                            "③.xls",
+                            "④.xls",
+                            "⑤.xls",
+                            "⑥.xls",
+                            "⑦.xls",
+                            "⑧.xls",
+                            "⑨.xls",
+                            "⑩.xls",
+                            "⑪.xls",
+                            "⑫.xls",
+                            "⑬.xls",
+                            "⑭.xls",
+                            "⑮.xls",
+                            "小物.xls",
+                            "原本.xls",
+                        )
+                    )
+                    or re.search(r"\(\d{3}\)\.xls$", f)
                 )
             ]
 
@@ -277,16 +443,18 @@ class Excel_check:
 
                     destination_sheet.range("B5").value = source_sheet.range("A1:H19").value
                     if floor == 1:
-                        destination_sheet['J9'].value = self.目地
-                        destination_sheet['J8'].value = self.入隅
+                        destination_sheet["J9"].value = self.目地
+                        destination_sheet["J8"].value = self.入隅
 
-                    stock_sheet = destination_wb.sheets['野縁']
-                    stock_sheet['AE3'].value = self.Address
-                    stock_sheet['AE5'].value = self.Builder_name
+                    stock_sheet = destination_wb.sheets["野縁"]
+                    stock_sheet["AE3"].value = self.Address
+                    stock_sheet["AE5"].value = self.Builder_name
 
                     # ✨ Apply floor-wise conditions
                     self.condition_applier.apply_conditions(destination_sheet, stock_sheet, self.builder_id, floor)
-                    self.condition_applier.apply_first_free_cell_conditions(destination_sheet, stock_sheet, self.builder_id, floor)
+                    self.condition_applier.apply_first_free_cell_conditions(
+                        destination_sheet, stock_sheet, self.builder_id, floor
+                    )
 
                     self.run_macro2(destination_wb)
                     self.run_sort_macro(destination_wb)
@@ -308,14 +476,13 @@ class Excel_check:
 
         except Exception as e:
             logging.error(f"❌ builder_copy critical error: {e}")
-            raise Exception("Builder copy failed")
+            raise Exception("Builder copy failed") from e
         finally:
             source_wb.close()
             app.quit()
 
-
     def run_macro2(self, workbook):
-        sheet_main = workbook.sheets['野縁']
+        sheet_main = workbook.sheets["野縁"]
         sheet_data = workbook.sheets["製作用データ"]
         sheet_main.range("U11").value = sheet_main.range("Q11:R110").value
         sorted_data = sorted(sheet_main.range("U11:V110").value, reverse=True)
@@ -329,7 +496,7 @@ class Excel_check:
 
     def run_sort_macro(self, workbook):
         sheet1 = workbook.sheets["その他"]
-        last_cell = sheet1.range("Q" + str(sheet1.cells.last_cell.row)).end('up').row
+        last_cell = sheet1.range("Q" + str(sheet1.cells.last_cell.row)).end("up").row
         sort_range = sheet1.range(f"Q5:T{last_cell}")
         sort_range.value = sorted(sort_range.value, reverse=True)
         workbook.save()
@@ -340,6 +507,7 @@ class Excel_check:
             for file in os.listdir(folder):
                 os.remove(os.path.join(folder, file))
             os.rmdir(folder)
+
 
 # === MAIN ===
 if __name__ == "__main__":

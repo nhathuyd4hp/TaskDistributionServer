@@ -1,5 +1,6 @@
 import redis
 import redis.asyncio as AsyncRedis
+
 from src.core.config import settings
 
 Async_Redis_POOL = AsyncRedis.ConnectionPool(

@@ -1,14 +1,13 @@
 # === token_manager.py ===
 
 import time
-from msal import ConfidentialClientApplication
+
 from config import CLIENT_ID, CLIENT_SECRET, TENANT_ID
+from msal import ConfidentialClientApplication
 
 # Token Cache
-_token_cache = {
-    "access_token": None,
-    "expires_at": 0
-}
+_token_cache = {"access_token": None, "expires_at": 0}
+
 
 def get_access_token():
     now = time.time()
@@ -16,11 +15,7 @@ def get_access_token():
         return _token_cache["access_token"]
 
     authority = f"https://login.microsoftonline.com/{TENANT_ID}"
-    app = ConfidentialClientApplication(
-        client_id=CLIENT_ID,
-        client_credential=CLIENT_SECRET,
-        authority=authority
-    )
+    app = ConfidentialClientApplication(client_id=CLIENT_ID, client_credential=CLIENT_SECRET, authority=authority)
 
     result = app.acquire_token_for_client(scopes=["https://graph.microsoft.com/.default"])
 
@@ -31,6 +26,7 @@ def get_access_token():
     _token_cache["expires_at"] = now + result["expires_in"]
 
     return _token_cache["access_token"]
+
 
 # Debug test (optional)
 if __name__ == "__main__":

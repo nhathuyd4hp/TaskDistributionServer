@@ -1,27 +1,27 @@
 # === progress_reporter.py ===
 
-import pandas as pd
-import os
-import logging
 import datetime
+import logging
+import os
+
+import pandas as pd
 from openpyxl import load_workbook
-from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles import Alignment, Font, PatternFill
 
 # In-memory progress data
 _progress_data = []
+
 
 def clear_report():
     """Clear the progress memory."""
     global _progress_data
     _progress_data = []
 
+
 def add_result(anken_number, builder_id, status):
     """Add a download result record."""
-    _progress_data.append({
-        "案件番号": anken_number,
-        "ビルダーID": builder_id,
-        "ステータス": status
-    })
+    _progress_data.append({"案件番号": anken_number, "ビルダーID": builder_id, "ステータス": status})
+
 
 def _beautify_excel(output_path):
     """Beautify the Excel formatting."""
@@ -72,6 +72,7 @@ def _beautify_excel(output_path):
     wb.save(output_path)
     logging.info(f"🎨 Beautified Progress Report: {output_path}")
 
+
 def save_report():
     """Save all collected progress to a beautiful timestamped Excel."""
     try:
@@ -99,6 +100,7 @@ def save_report():
 
     except Exception as e:
         logging.error(f"❌ Failed to save Progress Report: {e}")
+
 
 def get_report():
     """Return the in-memory progress data."""

@@ -175,10 +175,10 @@ class MailDealer:
             if self.page.frame(name="main").locator("div[class='alert alert-error']").count() == 1:
                 notification = self.page.frame(name="main").locator("div[class='alert alert-error']").text_content()
                 time.sleep(2.5)
-                return self.update_mail(mail_id,label,fMatterID,comment)
+                return self.update_mail(mail_id, label, fMatterID, comment)
             if self.page.frame(name="main").locator("div[class^='mailList-no-tab']").count() == 0:
-                return self.update_mail(mail_id,label,fMatterID,comment)
+                return self.update_mail(mail_id, label, fMatterID, comment)
             notification = self.page.frame(name="main").locator("div[class^='mailList-no-tab']").text_content().strip()
             if notification == "検索条件に一致するデータがありません。":
                 return False
-            return self.update_mail(mail_id,label,fMatterID,comment)
+            return self.update_mail(mail_id, label, fMatterID, comment)

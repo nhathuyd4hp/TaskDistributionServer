@@ -1,21 +1,21 @@
 # --- Main.py ---
 
-from Nasiwak import Bot_Update
+import logging
+import os
+import shutil
+import threading
+import time
 import tkinter as tk
 from tkinter import ttk
+
 import pandas as pd
-import os
-import babel.numbers
-import shutil
-import logging
-import time
-import threading
+from config_access_token import token_file  # noqa
 
 # Excel Check Engine
 from excel_check import Excel_check
+from Nasiwak import Bot_Update
 from progress_reporter import add_result, clear_report, save_report
 
-from config_access_token import token_file # noqa
 # Replace with your actual file path
 file_path = os.path.join(os.getcwd(), "Access_token", "Access_token.txt")
 logging.info(f"file path for text file is: {file_path}")
@@ -38,15 +38,18 @@ result = []
 
 # 📋 GUI Functions
 
+
 def clear_placeholder(event, entry, placeholder):
     if entry.get() == placeholder:
         entry.delete(0, tk.END)
         entry.config(foreground="black")
 
+
 def restore_placeholder(event, entry, placeholder):
     if entry.get() == "":
         entry.insert(0, placeholder)
         entry.config(foreground="gray")
+
 
 def load_values():
 
@@ -77,6 +80,7 @@ def read_excel_file(file_path):
         logging.error(f"Failed to read the Excel file:\n{str(e)}")
         root.quit()
         root.destroy()
+
 
 def Start_Excel_check():
     global Ankens_bango_builder
@@ -111,15 +115,17 @@ def Start_Excel_check():
     Ankens_bango_builder.clear()
 
     save_report()  # 💾 Save the full Progress_Report at the end
-    
+
+
 def empty_ankens_folder():
-    Ankens_folder = 'Ankens'
+    Ankens_folder = "Ankens"
     if os.path.exists(Ankens_folder):
         shutil.rmtree(Ankens_folder)
         logging.info(f"Deleted contents of {Ankens_folder} folder.")
     os.makedirs(Ankens_folder)
     logging.info(f"Created an empty {Ankens_folder} folder.")
     time.sleep(1)
+
 
 def threaded_excel_check():
     thread = threading.Thread(target=Start_Excel_check)
@@ -135,12 +141,15 @@ class TextHandler(logging.Handler):
 
     def emit(self, record):
         msg = self.format(record)
+
         def append():
-            self.text_widget.configure(state='normal')
-            self.text_widget.insert(tk.END, msg + '\n')
-            self.text_widget.configure(state='disabled')
+            self.text_widget.configure(state="normal")
+            self.text_widget.insert(tk.END, msg + "\n")
+            self.text_widget.configure(state="disabled")
             self.text_widget.yview(tk.END)  # Auto-scroll to latest log
+
         self.text_widget.after(0, append)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
@@ -153,7 +162,7 @@ if __name__ == "__main__":
 
     # GUI Components
     logo_frame = tk.Frame(root, bg="#d6e0f0")
-    logo_frame.pack(fill='x', padx=10, pady=5)
+    logo_frame.pack(fill="x", padx=10, pady=5)
 
     title_label = tk.Label(root, text="Zenbu Bot", font=("Segoe UI Emoji", 18, "bold"), bg="#d6e0f0")
     title_label.pack(pady=(10, 5))
@@ -178,14 +187,11 @@ if __name__ == "__main__":
     start_button = ttk.Button(root, text="START", width=10, command=threaded_excel_check)
     start_button.pack(pady=10)
 
-    footer_label = tk.Label(root, text=f"Nasiwak Services India Pvt Ltd  V{CURRENT_VERSION}", bg="#d6e0f0", fg="#333333")
-    footer_label.pack(side='bottom', pady=(5, 0))
-
-    root.after(
-        5000,
-        read_excel_file,
-        r"C:\Users\ACER\Downloads\ZenbuBot_8\Excel check values.xlsm"
+    footer_label = tk.Label(
+        root, text=f"Nasiwak Services India Pvt Ltd  V{CURRENT_VERSION}", bg="#d6e0f0", fg="#333333"
     )
+    footer_label.pack(side="bottom", pady=(5, 0))
 
+    root.after(5000, read_excel_file, r"C:\Users\ACER\Downloads\ZenbuBot_8\Excel check values.xlsm")
 
     root.mainloop()
