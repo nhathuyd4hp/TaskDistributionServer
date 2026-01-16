@@ -99,7 +99,7 @@ def main(self):
             mails.to_excel(os.path.join(temp_dir, ResultFile), index=False)
             result = minio.fput_object(
                 bucket_name=settings.MINIO_BUCKET,
-                object_name=f"DrawingClassic/{ResultFile}",
+                object_name=f"AndPadShuko/{ResultFile}",
                 file_path=os.path.join(temp_dir, ResultFile),
                 content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )

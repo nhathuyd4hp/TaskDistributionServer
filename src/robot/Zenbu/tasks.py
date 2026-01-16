@@ -8,11 +8,10 @@ from celery import shared_task
 from src.core.inactive_task import InactiveTask
 
 
-@shared_task(bind=True, name="Zenbu")
+@shared_task(bind=True, name="Zenbu",base=InactiveTask)
 def Zenbu(
     self,
     file: io.BytesIO | str = "Zenbu",
-    base=InactiveTask,
 ):
     log_dir = Path(__file__).resolve().parents[3] / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
