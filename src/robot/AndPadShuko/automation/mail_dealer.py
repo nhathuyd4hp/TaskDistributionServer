@@ -128,6 +128,12 @@ class MailDealer:
                     == 4
                 ):
                     break
+                time.sleep(1)
+                if self.page.frame(name="main").locator("div[class^='mailList-no-tab']").count() == 1:
+                    notification = self.page.frame(name="main").locator("div[class^='mailList-no-tab']").text_content().strip()
+                    self.logger.warning(notification)
+                    return False
+                time.sleep(1)
                 continue
             status = [
                 self.page.frame(name="main")
@@ -180,5 +186,8 @@ class MailDealer:
                 return self.update_mail(mail_id, label, fMatterID, comment)
             notification = self.page.frame(name="main").locator("div[class^='mailList-no-tab']").text_content().strip()
             if notification == "検索条件に一致するデータがありません。":
+                self.logger.warning(notification)
                 return False
+            else:
+                self.logger.info(notification)
             return self.update_mail(mail_id, label, fMatterID, comment)
