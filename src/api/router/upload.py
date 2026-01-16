@@ -15,7 +15,7 @@ router = APIRouter(prefix="/assets", tags=["Upload"])
 @router.post(
     path="",
     name="Upload Asset",
-    description="Upload File | Tồn tại trong 7 ngày",
+    description=f"Upload File | Tồn tại trong {settings.ASSET_RETENTION_DAYS} ngày",
     response_model=SuccessResponse,
 )
 async def upload_asset(file: UploadFile = File(...)):
