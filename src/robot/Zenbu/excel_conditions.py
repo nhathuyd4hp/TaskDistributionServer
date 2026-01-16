@@ -46,7 +46,7 @@ class ExcelConditionApplier:
 
             logging.info(f"✅ Normal Conditions after floor filter: {builder_conditions.shape[0]} rows")
 
-            for idx, row in builder_conditions.iterrows():
+            for _, row in builder_conditions.iterrows():
                 location = row["Location"]
                 action = row["What to do"]
 
@@ -68,7 +68,7 @@ class ExcelConditionApplier:
                 self.conditions_df["Builder Code"].astype(str).str.strip() == str(builder_id).strip()
             ]
             logging.info(
-                f"🔍 Checking First Free Cell Rows for Builder {builder_id}: {builder_conditions.shape[0]} rows (before filtering)"
+                f"Checking First Free Cell Rows for Builder {builder_id}: {builder_conditions.shape[0]} rows (before filtering)"  # noqa
             )
 
             # 🛡 FILTER ONLY MATCHING FLOOR FIRST

@@ -35,7 +35,7 @@ def search_anken_folder(anken_number, retries=3, delay=3):
             if attempt < retries - 1:
                 time.sleep(delay)
             else:
-                raise Exception(f"Search failed after {retries} attempts: {e}")
+                raise Exception(f"Search failed after {retries} attempts: {e}") from None
 
 
 def list_children(drive_id, folder_id):

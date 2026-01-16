@@ -5,10 +5,11 @@ import sys
 from pathlib import Path
 
 from celery import shared_task
+
 from src.core.inactive_task import InactiveTask
 
 
-@shared_task(bind=True, name="Zenbu",base=InactiveTask)
+@shared_task(bind=True, name="Zenbu", base=InactiveTask)
 def Zenbu(
     self,
     file: io.BytesIO | str = "Zenbu",

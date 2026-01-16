@@ -375,7 +375,6 @@ class Excel_check:
             source_wb_path = os.path.join("Ankens", f"{self.builder_id} {self.Builder_name}", f"{self.builder_id}.xlsx")
             source_wb = app.books.open(source_wb_path)
 
-            # excel_files = [f for f in os.listdir(excel_folder) if f.endswith(('階.xls', '屋.xls', 'のみ.xls', '1).xls', '2).xls', '3).xls', '4).xls', '5).xls', '6).xls', '7).xls', '8).xls', '9).xls', '①.xls', '②.xls', '③.xls', '④.xls', '⑤.xls', '⑥.xls', '⑦.xls', '⑧.xls', '⑨.xls', '⑩.xls', '⑪.xls', '⑫.xls', '⑬.xls', '⑭.xls', '⑮.xls', '小物.xls', '原本.xls'))]
             excel_files = [
                 f
                 for f in os.listdir(excel_folder)

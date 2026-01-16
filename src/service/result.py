@@ -1,4 +1,5 @@
 from minio import Minio
+
 from src.core.config import settings
 
 ResultService = Minio(

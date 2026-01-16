@@ -130,8 +130,8 @@ class MailDealer:
                     break
                 time.sleep(1)
                 if self.page.frame(name="main").locator("div[class^='mailList-no-tab']").count() == 1:
-                    notification = self.page.frame(name="main").locator("div[class^='mailList-no-tab']").text_content().strip()
-                    self.logger.warning(notification)
+                    notification = self.page.frame(name="main").locator("div[class^='mailList-no-tab']").text_content()
+                    self.logger.warning(notification.strip())
                     return False
                 time.sleep(1)
                 continue
