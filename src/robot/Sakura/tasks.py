@@ -232,7 +232,7 @@ def Sakura(self):
         )
         result = minio.fput_object(
             bucket_name=settings.RESULT_BUCKET,
-            object_name=f"Sakura/{self.request.id}.pdf",
+            object_name=f"Sakura/{self.request.id}/Sakura.pdf",
             file_path=pdfFile,
             content_type="application/pdf",
         )
