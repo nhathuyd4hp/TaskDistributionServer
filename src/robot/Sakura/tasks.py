@@ -8,6 +8,7 @@ from decimal import ROUND_HALF_UP, Decimal
 import pandas as pd
 import redis
 import xlwings as xw
+import shutil
 from celery import shared_task
 from selenium import webdriver
 from xlwings.main import Sheet
@@ -19,6 +20,7 @@ from src.core.redis import REDIS_POOL
 from src.robot.Sakura.automation.bot import MailDealer, SharePoint, WebAccess
 from src.service import ResultService as minio
 
+download_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "downloads")
 # -- Chrome Options
 options = webdriver.ChromeOptions()
 options.add_argument("--disable-notifications")
@@ -29,7 +31,7 @@ options.add_experimental_option("excludeSwitches", ["enable-logging"])
 options.add_experimental_option(
     "prefs",
     {
-        "download.default_directory": os.path.join(os.path.dirname(os.path.abspath(__file__)), "downloads"),
+        "download.default_directory": download_path,
         "download.prompt_for_download": False,
         "safebrowsing.enabled": True,
     },
@@ -99,6 +101,8 @@ def main(
             if all(status for _, _, status in downloads):
                 prices.append(downloads[0][2])
                 continue
+            if len(downloads) != 1:
+                raise RuntimeError("Có nhiều file")
             for _, file, status in downloads:
                 price = None
                 found = False
@@ -182,36 +186,36 @@ def main(
             password=settings.MAIL_DEALER_PASSWORD,
             logger=logger,
             options=options,
-        ):
+        ) as mail_dealer:
             logger.info("send_mail")
-            pass
-        #     mail_dealer.send_mail(
-        #         fr="kantou@nsk-cad.com",
-        #         to="ikeda.k@jkenzai.com",
-        #         subject=f"さくら建設　鋼製野縁納材報告書（{from_date}～{to_date}）",
-        #         content=f"""
-        #         ジャパン建材　池田様
+            mail_dealer.send_mail(
+                fr="kantou@nsk-cad.com",
+                to="ikeda.k@jkenzai.com",
+                subject=f"さくら建設　鋼製野縁納材報告書（{from_date}～{to_date}）",
+                content=f"""
+                ジャパン建材　池田様
 
-        #         いつもお世話になっております。
+                いつもお世話になっております。
 
-        #         さくら建設　鋼製野縁納材報告書（{from_date}～{to_date}）
-        #         を送付致しましたので、ご査収の程よろしくお願い致します。
+                さくら建設　鋼製野縁納材報告書（{from_date}～{to_date}）
+                を送付致しましたので、ご査収の程よろしくお願い致します。
 
-        #         ----・・・・・----------・・・・・----------・・・・・-----
+                ----・・・・・----------・・・・・----------・・・・・-----
 
-        #         　エヌ・エス・ケー工業㈱　横浜営業所
-        #         中山　知凡
-        #
-        #         　〒222-0033
-        #         　横浜市港北区新横浜２-４-６　マスニ第一ビル８F-B
-        #         　TEL:(045)595-9165 / FAX:(045)577-0012
-        #
-        #         -----・・・・・----------・・・・・----------・・・・・-----
-        #         """,
-        #         attachments=[
-        #             os.path.abspath(pdfFile),
-        #         ],
-        #     )
+                　エヌ・エス・ケー工業㈱　横浜営業所
+                中山　知凡
+        
+                　〒222-0033
+                　横浜市港北区新横浜２-４-６　マスニ第一ビル８F-B
+                　TEL:(045)595-9165 / FAX:(045)577-0012
+        
+                -----・・・・・----------・・・・・----------・・・・・-----
+                """,
+                attachments=[
+                    os.path.abspath(pdfFile),
+                ],
+            )
+    shutil.rmtree(download_path)
     return pdfFile
 
 

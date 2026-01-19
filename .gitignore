@@ -233,3 +233,4 @@ Tesseract/
 Access_token_log
 *.jww
 *.csv
+*.xls

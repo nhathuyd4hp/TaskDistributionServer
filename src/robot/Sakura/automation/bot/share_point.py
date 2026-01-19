@@ -103,6 +103,8 @@ class SharePoint(IBot):
         self.logger.info(f"Search {file_pattern} - {site_url}")
         result = []
         self.navigate(site_url)
+        self.navigate(site_url)
+        self.navigate(site_url)
         # Folder
         folder_found = False
         folders: List[str] = file_pattern.split("/")[:-1]
