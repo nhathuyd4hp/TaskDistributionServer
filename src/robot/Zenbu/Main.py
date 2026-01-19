@@ -1,5 +1,5 @@
 # --- Main.py ---
-
+import argparse
 import logging
 import os
 import shutil
@@ -131,6 +131,16 @@ def threaded_excel_check():
     thread = threading.Thread(target=Start_Excel_check)
     thread.start()
 
+    monitor_thread(thread)
+
+
+def monitor_thread(thread):
+    if thread.is_alive():
+        root.after(5000, lambda: monitor_thread(thread))
+    else:
+        root.quit()
+        root.destroy()
+
 
 class TextHandler(logging.Handler):
     """Custom logging handler that writes to a Tkinter Text widget."""
@@ -151,7 +161,18 @@ class TextHandler(logging.Handler):
         self.text_widget.after(0, append)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--file",
+        required=True,
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
+    args = parse_args()
+
     root = tk.Tk()
     root.title("Zenbu Bot")
     root.geometry("1000x700")
@@ -175,7 +196,7 @@ if __name__ == "__main__":
 
     excel_file_entry = ttk.Entry(excel_frame, width=90)
     excel_file_entry.grid(row=0, column=1, padx=10)
-    excel_file_entry.insert(0, r"C:\Users\ACER\Downloads\ZenbuBot_8\Excel check values.xlsm")
+    excel_file_entry.insert(0, args.file)
     excel_file_entry.state(["readonly"])
 
     text_area = tk.Text(root, height=15, width=80, bg="#e6eefc", font=("Segoe UI Emoji", 10))
@@ -192,6 +213,8 @@ if __name__ == "__main__":
     )
     footer_label.pack(side="bottom", pady=(5, 0))
 
-    root.after(5000, read_excel_file, r"C:\Users\ACER\Downloads\ZenbuBot_8\Excel check values.xlsm")
+    root.after(5000, read_excel_file, args.file)
+
+    root.after(10000, read_excel_file, start_button.invoke)
 
     root.mainloop()

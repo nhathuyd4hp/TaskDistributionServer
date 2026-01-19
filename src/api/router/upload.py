@@ -32,7 +32,7 @@ async def upload_asset(file: UploadFile = File(...)):
         content_type=file.content_type,
         metadata={"expires_at": (datetime.now() + timedelta(days=settings.ASSET_RETENTION_DAYS)).isoformat()},
     )
-    return SuccessResponse(data=f"{settings.TEMP_BUCKET}/{result.object_name}")
+    return SuccessResponse(data=result.object_name)
 
 
 @router.get(
