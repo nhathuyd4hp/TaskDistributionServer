@@ -14,10 +14,10 @@ from selenium import webdriver
 from xlwings.main import Sheet
 from xlwings.utils import col_name
 
-from src.core.type import UserCancelledError
 from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
+from src.core.type import UserCancelledError
 from src.robot.Sakura.automation.bot import MailDealer, SharePoint, WebAccess
 from src.service import ResultService as minio
 
@@ -228,8 +228,8 @@ def main(
 )
 def Sakura(self):
     logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
-    checker=redis.Redis(connection_pool=REDIS_POOL)
-    task_id=self.request.id
+    checker = redis.Redis(connection_pool=REDIS_POOL)
+    task_id = self.request.id
     if checker.get(task_id) is not None:
         raise UserCancelledError()
     with tempfile.TemporaryDirectory() as temp_dir:

@@ -1,11 +1,12 @@
+import redis
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
-import redis
+
 from src.api.common.response import SuccessResponse
 from src.api.dependency import get_session
-from src.model.runs import Status
 from src.core.redis import REDIS_POOL
-from src.service import RunService,ErrorService
+from src.model.runs import Status
+from src.service import ErrorService, RunService
 
 router = APIRouter(prefix="/runs", tags=["Runs"])
 
@@ -40,12 +41,13 @@ def get_history(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="run not found")
     return SuccessResponse(data=history)
 
+
 @router.get(
     path="/{id}/error",
     name="Lịch sử chạy [Error]",
     response_model=SuccessResponse,
 )
-def get_history(
+def get_error(
     id: str,
     session: Session = Depends(get_session),
 ):
@@ -68,5 +70,5 @@ def stop_running(
     history = RunService(session).findByID(id)
     if history is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="run not found")
-    redis.Redis(connection_pool=REDIS_POOL).set(id,"STOP",ex=24 * 60 * 60)
+    redis.Redis(connection_pool=REDIS_POOL).set(id, "STOP", ex=24 * 60 * 60)
     return SuccessResponse(data=history)

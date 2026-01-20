@@ -7,9 +7,9 @@ from celery.result import AsyncResult
 from celery.worker.consumer.consumer import Consumer
 from sqlmodel import Session, select
 
-from src.core.type import UserCancelledError
 from src.core.config import settings
 from src.core.redis import REDIS_POOL
+from src.core.type import UserCancelledError
 from src.model import Error, Runs
 from src.model.runs import Status
 

@@ -165,6 +165,7 @@ app = FastAPI(
 )
 app.add_middleware(GlobalExceptionMiddleware)
 
+
 @app.get("/redocs", include_in_schema=False, response_class=HTMLResponse)
 async def documentation(_: str = Depends(required_admin)):
     return get_redoc_html(
