@@ -7,6 +7,7 @@ from celery.result import AsyncResult
 from celery.worker.consumer.consumer import Consumer
 from sqlmodel import Session, select
 
+from src.core.type import UserCancelledError
 from src.core.config import settings
 from src.core.redis import REDIS_POOL
 from src.model import Error, Runs
@@ -78,16 +79,21 @@ def task_failure_handler(sender: Task, exception: Exception, **kwargs):
         record = session.exec(statement).one_or_none()
         if record is None:
             return
-        error = Error(
-            run_id=context.id,
-            error_type=type(exception).__name__,
-            message=str(exception),
-            traceback="".join(traceback.format_tb(exception.__traceback__)),
-        )
-        record.status = Status.FAILURE
-        record.result = type(exception).__name__
-        session.add(record)
-        session.add(error)
+        if isinstance(exception, UserCancelledError):
+            record.status = Status.CANCEL
+            record.result = exception.message
+            session.add(record)
+        else:
+            error = Error(
+                run_id=context.id,
+                error_type=type(exception).__name__,
+                message=str(exception),
+                traceback="".join(traceback.format_tb(exception.__traceback__)),
+            )
+            record.status = Status.FAILURE
+            record.result = type(exception).__name__
+            session.add(error)
+            session.add(record)
         session.commit()
         message = f"""\n
 {record.robot} thất bại

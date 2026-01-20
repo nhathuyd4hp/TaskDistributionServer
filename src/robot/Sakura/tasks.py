@@ -14,6 +14,7 @@ from selenium import webdriver
 from xlwings.main import Sheet
 from xlwings.utils import col_name
 
+from src.core.type import UserCancelledError
 from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
@@ -41,6 +42,8 @@ options.add_experimental_option(
 def main(
     output: str,
     logger: logging.Logger,
+    checker: redis.Redis,
+    task_id: str,
 ):
     # From To
     to_date = datetime.now().replace(day=20)
@@ -225,10 +228,16 @@ def main(
 )
 def Sakura(self):
     logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
+    checker=redis.Redis(connection_pool=REDIS_POOL)
+    task_id=self.request.id
+    if checker.get(task_id) is not None:
+        raise UserCancelledError()
     with tempfile.TemporaryDirectory() as temp_dir:
         pdfFile = main(
             output=temp_dir,
             logger=logger,
+            checker=checker,
+            task_id=task_id,
         )
         result = minio.fput_object(
             bucket_name=settings.RESULT_BUCKET,
