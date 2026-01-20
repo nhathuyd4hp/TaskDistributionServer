@@ -19,7 +19,7 @@ from src.api.dependency import required_admin
 from src.api.middleware import GlobalExceptionMiddleware
 from src.api.router import api
 from src.core.config import settings
-from src.core.redis import Async_Redis_POOL
+from src.core.redis import ASYNC_REDIS_POOL
 from src.scheduler import scheduler
 from src.service import ResultService as minio
 from src.service import ScheduleService
@@ -75,7 +75,7 @@ async def log_collector(
 
 
 async def subscriber(*args):
-    r = redis.Redis(connection_pool=Async_Redis_POOL)
+    r = redis.Redis(connection_pool=ASYNC_REDIS_POOL)
     p = r.pubsub()
     await p.subscribe(*args)
     async for message in p.listen():
@@ -160,7 +160,6 @@ app = FastAPI(
     title=settings.APP_NAME,
     debug=settings.DEBUG,
     lifespan=lifespan,
-    # docs_url=None,
     # redoc_url=None,
     openapi_url=f"/{uuid.uuid4()}.json",
 )

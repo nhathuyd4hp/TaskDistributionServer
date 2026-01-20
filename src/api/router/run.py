@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
-
+import redis
 from src.api.common.response import SuccessResponse
 from src.api.dependency import get_session
 from src.model.runs import Status
+from src.core.redis import REDIS_POOL
 from src.service import RunService,ErrorService
 
 router = APIRouter(prefix="/runs", tags=["Runs"])
@@ -52,3 +53,20 @@ def get_history(
     if error is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="error not found")
     return SuccessResponse(data=error)
+
+
+@router.post(
+    path="/{id}/stop",
+    name="Hủy/Dừng Robot",
+    status_code=200,
+    response_model=SuccessResponse,
+)
+def stop_running(
+    id: str,
+    session: Session = Depends(get_session),
+):
+    history = RunService(session).findByID(id)
+    if history is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="run not found")
+    redis.Redis(connection_pool=REDIS_POOL).set(id,"STOP",ex=24 * 60 * 60)
+    return SuccessResponse(data=history)
