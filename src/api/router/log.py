@@ -23,7 +23,7 @@ async def streaming(run_id: str):
             if line:
                 yield f"{line}\n"
             else:
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.25)
 
 
 @router.get("/{run_id}")
