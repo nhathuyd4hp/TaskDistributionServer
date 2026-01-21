@@ -147,6 +147,7 @@ class SharePoint:
                 download.save_as(save_path)
                 downloads.append(save_path)
                 self.logger.info(f"Save {save_path}")
+                time.sleep(0.5)
             return downloads
         except TimeoutError as e:
             tb = traceback.extract_tb(sys.exc_info()[2])
