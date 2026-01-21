@@ -1,7 +1,7 @@
 import traceback
 
 import redis
-from celery import signals
+from celery import signals, states
 from celery.app.task import Context, Task
 from celery.result import AsyncResult
 from celery.worker.consumer.consumer import Consumer
@@ -21,7 +21,7 @@ def start_up(sender: Consumer, **kwargs):
         records: list[Runs] = session.exec(statement).all()
         for record in records:
             result = AsyncResult(id=record.id, app=sender.app)
-            if result.state in ["Pending", "Failure"]:
+            if result.state in [states.PENDING, states.FAILURE]:
                 record.status = Status.FAILURE
                 session.add(record)
         session.commit()
@@ -46,7 +46,7 @@ def task_prerun_handler(sender=None, task_id=None, **kwargs):
         session.commit()
         message = f"""\n
 {record.robot} bắt đầu
-----------------------
+{"-"*len(f"{record.robot} bắt đầu")}
 ID: {record.id}
 """
         redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", message)
@@ -65,7 +65,7 @@ def task_success_handler(sender=None, result=None, **kwargs):
         session.commit()
         message = f"""\n
 {record.robot} hoàn thành
--------------------------
+{"-"*len(f"{record.robot} hoàn thành")}
 ID: {record.id}
 """
         redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", message)
@@ -86,7 +86,7 @@ def task_failure_handler(sender: Task, exception: Exception, **kwargs):
             session.commit()
             message = f"""\n
 {record.robot} đã dừng lại
---------------------------
+{"-"*len(f"{record.robot} đã dừng lại")}
 ID: {record.id}
 """
             redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", message)
@@ -104,7 +104,7 @@ ID: {record.id}
             session.commit()
             message = f"""\n
 {record.robot} thất bại
------------------------
+{"-"*len(f"{record.robot} thất bại")}
 ID: {record.id}
 """
             redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", message)

@@ -29,3 +29,4 @@ from src.robot.OsakaMitsumoriSoufu import tasks  # noqa
 from src.robot.GuiBanVeShuko import tasks  # noqa
 from src.robot.Zenbu import tasks  # noqa
 from src.robot.KeiaiNoukiIrai import tasks  # noqa
+from src.robot.ChuyenTenFileTuFolder import tasks  # noqa
