@@ -131,6 +131,8 @@ class SharePoint:
             )
             for i in range(items.count()):
                 item = items.nth(i)
+                item.scroll_into_view_if_needed()
+                item.wait_for(state="visible", timeout=5000)
                 item.click(button="right")
                 download_btn = self.page.locator(
                     "button[data-automationid='downloadCommand'][role='menuitem']:not([type='button'])"
