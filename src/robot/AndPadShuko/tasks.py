@@ -9,6 +9,7 @@ import redis
 from celery import shared_task
 from playwright.sync_api import sync_playwright
 
+from src.core.type import UserCancelledError
 from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
@@ -21,7 +22,13 @@ from src.service import ResultService as minio
     name="AndPad Shuko",
 )
 def main(self):
-    logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
+    # ----- #
+    checker = redis.Redis(connection_pool=REDIS_POOL)
+    task_id = self.request.id
+    if checker.get(task_id) is not None:
+        raise UserCancelledError()
+    # ----- #
+    logger = Log.get_logger(channel=task_id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     logger.info(date.today())
     # ----- #
     with (
@@ -54,6 +61,8 @@ def main(self):
                 logger=logger,
             ) as wa,
         ):
+            if checker.get(task_id) is not None:
+                raise UserCancelledError()
             logger.info("Mail box: 専用アドレス・秀光ビルド")
             mails = md.mail_box("専用アドレス・秀光ビルド")
             mails = mails[mails[" 件名 "].str.contains("【ANDPAD】", na=False)]
@@ -64,6 +73,8 @@ def main(self):
             mails.to_excel(os.path.join(temp_dir, ResultFile), index=False)
             mails = pd.read_excel(os.path.join(temp_dir, ResultFile))
             for index, row in mails.iterrows():
+                if checker.get(task_id) is not None:
+                    raise UserCancelledError()
                 id = row[" ID "]
                 subject = row[" 件名 "]
                 # ---- #
@@ -87,6 +98,8 @@ def main(self):
                         mails.at[index, " Note "] = "Chưa cập ngày giao hàng"
                         continue
                     delivery_date = datetime.strptime(確定納期, "%Y/%m/%d").date()
+                    if checker.get(task_id) is not None:
+                        raise UserCancelledError()
                     mails.at[index, " Note "] = md.update_mail(
                         mail_id=str(id),
                         label="vietnamrpa",

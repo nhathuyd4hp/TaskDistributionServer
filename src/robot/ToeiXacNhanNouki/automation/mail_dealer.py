@@ -297,7 +297,7 @@ class MailDealer:
             input.send_keys(案件ID)
             time.sleep(1)
             button.click()
-            time.sleep(2)
+            time.sleep(1)
             # Check Result
             snackbar_div = self.wait.until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "div[class='snackbar__msg']"))
@@ -309,13 +309,16 @@ class MailDealer:
                 self.logger.info(f"Liên kết {案件ID}: {snackbar_div.text}")
                 return False, snackbar_div.text
         except TimeoutException:
-            button = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[title='一括操作']")))
-            button = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[title='一括操作']")))
-            button.click()
-            return self.一括操作(
-                案件ID=案件ID,
-                このメールと同じ親番号のメールをすべて関連付ける=このメールと同じ親番号のメールをすべて関連付ける,
-            )
+            try:
+                button = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[title='一括操作']")))
+                button = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[title='一括操作']")))
+                button.click()
+                return self.一括操作(
+                    案件ID=案件ID,
+                    このメールと同じ親番号のメールをすべて関連付ける=このメールと同じ親番号のメールをすべて関連付ける,
+                )
+            except ElementClickInterceptedException:
+                return False, str(e)
         except StaleElementReferenceException:
             return self.一括操作(
                 案件ID=案件ID,
