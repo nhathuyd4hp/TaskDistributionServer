@@ -95,6 +95,7 @@ class WebAccess:
             self.page.locator("input[name='search_article_nm']").click()
             time.sleep(0.25)
             self.page.locator("input[name='search_article_nm']").fill(案件名_物件名)
+            self.page.locator("input[name='search_builder_name_like']").fill("秀光")
             with self.page.expect_navigation(wait_until="domcontentloaded"):
                 self.page.locator("button[class='search fa fa-search']").click(force=True)
             with self.page.expect_download() as download_info:

@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import redis
 from celery import shared_task
+from celery.app.task import Task
 from playwright.sync_api import sync_playwright
 
 from src.core.config import settings
@@ -21,7 +22,7 @@ from src.service import ResultService as minio
     bind=True,
     name="AndPad Shuko",
 )
-def main(self):
+def main(self: Task):
     # ----- #
     checker = redis.Redis(connection_pool=REDIS_POOL)
     task_id = self.request.id
