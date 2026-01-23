@@ -26,8 +26,8 @@ def get_schedules(scheduler: BackgroundScheduler = Depends(get_scheduler)):
             "name": job.args[0],
             "parameters": job.kwargs,
             "next_run_time": job.next_run_time,
-            "start_date": job.trigger.start_date,
-            "end_date": job.trigger.end_date,
+            "start_date": CronTrigger(job.trigger).start_date,
+            "end_date": CronTrigger(job.trigger).end_date,
             "status": "ACTIVE" if job.next_run_time else "EXPIRED",
         }
         for job in jobs

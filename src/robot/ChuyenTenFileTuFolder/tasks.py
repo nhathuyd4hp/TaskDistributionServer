@@ -38,8 +38,8 @@ def main(
 ):
     task_id = self.request.id
     logger = Log.get_logger(channel=task_id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
-    if factory == "":
-        raise RuntimeError("Invalid factory configuration: value is empty")
+    if factory not in ["Shiga", "Toyo", "Chiba"]:
+        raise ValueError("Invalid factory configuration: factory must be one of ['Shiga', 'Toyo', 'Chiba']")
     # ----- Convert process_date into datetime ----- #
     if isinstance(process_date, str):
         process_date: datetime = datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f")
@@ -47,40 +47,51 @@ def main(
         sync_playwright() as p,
         tempfile.TemporaryDirectory() as temp_dir,
     ):
-        browser = p.chromium.launch(headless=True, args=["--start-maximized"])
-        context = browser.new_context(no_viewport=True)
-        logger.info("login sharepoint")
-        with SharePoint(
-            domain=settings.SHAREPOINT_DOMAIN,
-            username=settings.SHAREPOINT_EMAIL,
-            password=settings.SHAREPOINT_PASSWORD,
-            playwright=p,
-            browser=browser,
-            context=context,
-            logger=logger,
-        ) as sp:
-            files = sp.download(
-                url=link_data(factory),
-                file=re.compile(r".*\.(xls|xlsx|xlsm|xlsb)$", re.IGNORECASE),
-                steps=[
-                    re.compile(rf"^0?{process_date.month}月0?{process_date.day}日配送分$"),
-                    re.compile("^確定データ$"),
-                ],
-                save_to=temp_dir,
-            )
-            files = [os.path.basename(file) for file in files]
-            for i, file in enumerate(files):
-                if match := re.search(r"＿(.*?)＿", file):
-                    file = match.group(1)
-                file = re.sub(r"\([^)]*(am|pm)[^)]*\)", "", file, flags=re.IGNORECASE)
-                files[i] = file
-            logger.info(f"[Scan] Total files found: {len(files)}")
-            result_path = os.path.join(temp_dir, "filenames.xlsx")
-            pd.DataFrame({"filename": files}).to_excel(result_path, index=False)
-            result = minio.fput_object(
-                bucket_name=settings.RESULT_BUCKET,
-                object_name=f"ChuyenTenFileTuFolder/{task_id}/{factory}.xlsx",
+        try:
+            browser = p.chromium.launch(headless=False, args=["--start-maximized"])
+            context = browser.new_context(no_viewport=True)
+            context.tracing.start(screenshots=True, snapshots=True, sources=True)
+            logger.info("login sharepoint")
+            with SharePoint(
+                domain=settings.SHAREPOINT_DOMAIN,
+                username=settings.SHAREPOINT_EMAIL,
+                password=settings.SHAREPOINT_PASSWORD,
+                playwright=p,
+                browser=browser,
+                context=context,
+                logger=logger,
+            ) as sp:
+                files = sp.download(
+                    url=link_data(factory),
+                    file=re.compile(r".*\.(xls|xlsx|xlsm|xlsb)$", re.IGNORECASE),
+                    steps=[
+                        re.compile(rf"^0?{process_date.month}月0?{process_date.day}日配送分$"),
+                        re.compile("^確定データ$"),
+                    ],
+                    save_to=temp_dir,
+                )
+                files = [os.path.basename(file) for file in files]
+                for i, file in enumerate(files):
+                    if match := re.search(r"＿(.*?)＿", file):
+                        file = match.group(1)
+                    file = re.sub(r"\([^)]*(am|pm)[^)]*\)", "", file, flags=re.IGNORECASE)
+                    files[i] = file
+                logger.info(f"[Scan] Total files found: {len(files)}")
+                result_path = os.path.join(temp_dir, "filenames.xlsx")
+                pd.DataFrame({"filename": files}).to_excel(result_path, index=False)
+                result = minio.fput_object(
+                    bucket_name=settings.RESULT_BUCKET,
+                    object_name=f"ChuyenTenFileTuFolder/{task_id}/{factory}.xlsx",
+                    file_path=result_path,
+                    content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+                return f"{settings.RESULT_BUCKET}/{result.object_name}"
+        except Exception:
+            trace_file = os.path.join(temp_dir, f"{task_id}.zip")
+            context.tracing.stop(path=trace_file)
+            minio.fput_object(
+                bucket_name=settings.TRACE_BUCKET,
+                object_name=os.path.basename(trace_file),
                 file_path=result_path,
                 content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
-            return f"{settings.RESULT_BUCKET}/{result.object_name}"

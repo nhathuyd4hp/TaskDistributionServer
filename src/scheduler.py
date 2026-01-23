@@ -23,6 +23,6 @@ def listener(event: JobEvent):
         session.commit()
 
 
-scheduler = BackgroundScheduler(timezone="Asia/Ho_Chi_Minh")
+scheduler = BackgroundScheduler()
 
 scheduler.add_listener(listener, events.EVENT_EXECUTOR_REMOVED | events.EVENT_JOB_ERROR)

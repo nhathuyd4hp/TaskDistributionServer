@@ -148,7 +148,7 @@ async def lifespan(app: FastAPI):
     scheduler.start()
     app.state.scheduler = scheduler
     # --- MinIO --- #
-    for bucket in [settings.RESULT_BUCKET, settings.TEMP_BUCKET]:
+    for bucket in [settings.RESULT_BUCKET, settings.TEMP_BUCKET, settings.TRACE_BUCKET]:
         if not minio.bucket_exists(bucket):
             minio.make_bucket(bucket)
         minio.set_bucket_lifecycle(bucket, settings.LifecycleConfig)

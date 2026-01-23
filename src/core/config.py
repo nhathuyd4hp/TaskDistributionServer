@@ -31,9 +31,11 @@ class Settings(BaseSettings):
     MINIO_ACCESS_KEY: str
     MINIO_SECRET_KEY: str
     MINIO_SECURE: bool = False
-    RESULT_BUCKET: str = "robot"
-    TEMP_BUCKET: str = "temp"
-    ASSET_RETENTION_DAYS: int = 31
+    # MINIO-BUCKET
+    RESULT_BUCKET: str = "robot"  # BUCKET [Result]
+    TEMP_BUCKET: str = "temp"  # BUCKET [TempFile]
+    TRACE_BUCKET: str = "trace"  # BUCKET [TraceBack]
+    ASSET_RETENTION_DAYS: int = 90  # [Lifecycle File]
     # WEB ACCESS
     WEBACCESS_USERNAME: str
     WEBACCESS_PASSWORD: str
