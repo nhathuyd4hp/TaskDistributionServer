@@ -160,7 +160,8 @@ app = FastAPI(
     title=settings.APP_NAME,
     debug=settings.DEBUG,
     lifespan=lifespan,
-    # redoc_url=None,
+    docs_url=None,
+    redoc_url=None,
     openapi_url=f"/{uuid.uuid4()}.json",
 )
 app.add_middleware(GlobalExceptionMiddleware)
