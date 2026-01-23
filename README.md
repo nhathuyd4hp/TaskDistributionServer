@@ -1,4 +1,4 @@
-# TaskDistribution
+# RPAControlCenter
 
 TaskDistribution là một bộ robot tự động hóa (Celery tasks + Playwright + SharePoint) dùng để xử lý và upload dữ liệu từ Excel/PDF lên SharePoint, kèm tracking qua models và migration.
 
