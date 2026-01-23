@@ -59,6 +59,7 @@ def main(self):
             ],
         )
         context = browser.new_context(no_viewport=True)
+        context.tracing.start(screenshots=True, snapshots=True, sources=True)
         with MailDealer(
             domain="https://mds3310.maildealer.jp/",
             username="vietnamrpa",

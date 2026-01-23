@@ -90,6 +90,7 @@ def seikyu_online(self, sheet_name: API | str = "/api/type/seikyu-online"):
             ],
         )
         context = browser.new_context(no_viewport=True)
+        context.tracing.start(screenshots=True, snapshots=True, sources=True)
         with (
             SharePoint(
                 domain=settings.SHAREPOINT_DOMAIN,

@@ -1,4 +1,5 @@
 import io
+import os
 import re
 import tempfile
 from datetime import datetime
@@ -63,95 +64,106 @@ def gui_ban_ve_toei(self, process_date: datetime | str | None = None):
     logger.info(f"Chạy với tham số: {process_date}")
     with tempfile.TemporaryDirectory() as temp_dir:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=False, args=["--start-maximized"])
-            context = browser.new_context(no_viewport=True)
-            with (
-                WebAccess(
-                    username=settings.WEBACCESS_USERNAME,
-                    password=settings.WEBACCESS_PASSWORD,
-                    playwright=p,
-                    browser=browser,
-                    context=context,
-                ) as wa,
-                SharePoint(
-                    domain=settings.SHAREPOINT_DOMAIN,
-                    username=settings.SHAREPOINT_EMAIL,
-                    password=settings.SHAREPOINT_PASSWORD,
-                    playwright=p,
-                    browser=browser,
-                    context=context,
-                ) as sp,
-                MailDealer(
-                    username=settings.MAIL_DEALER_USERNAME,
-                    password=settings.MAIL_DEALER_PASSWORD,
-                    playwright=p,
-                    browser=browser,
-                    context=context,
-                ) as md,
-            ):
-                logger.info("Tải dữ liệu từ WebAccess")
-                data = wa.download_data(
-                    process_date=datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y/%m/%d"),
-                )
-                data = data[["案件番号", "得意先名", "物件名", "図面", "確定納期", "資料リンク"]].copy()
-                data["Result"] = pd.NA
-                for index, row in data.iterrows():
-                    logger.info(row)
-                    # Kiểm tra nouki
-                    if pd.isna(row["確定納期"]):
-                        logger.warning("Không có nouki")
-                        data.at[index, "Result"] = "Không có nouki"
-                        continue
-                    # Kiểm tra địa chỉ gửi
-                    mail_address = wa.mail_address(str(row["案件番号"]))
-                    if mail_address is None:
-                        logger.warning("Không tìm thấy mail nhận")
-                        data.at[index, "Result"] = "Không tìm thấy mail nhận"
-                        continue
-                    logger.info("Tải dữ liệu từ SharePoint")
-                    downloads = sp.download(
-                        url=row["資料リンク"],
-                        steps=[
-                            re.compile("^割付図・エクセル$"),
-                        ],
-                        file=re.compile(r"\.pdf$", re.IGNORECASE),
-                        save_to=temp_dir,
+            try:
+                browser = p.chromium.launch(headless=False, args=["--start-maximized"])
+                context = browser.new_context(no_viewport=True)
+                context.tracing.start(screenshots=True, snapshots=True, sources=True)
+                with (
+                    WebAccess(
+                        username=settings.WEBACCESS_USERNAME,
+                        password=settings.WEBACCESS_PASSWORD,
+                        playwright=p,
+                        browser=browser,
+                        context=context,
+                    ) as wa,
+                    SharePoint(
+                        domain=settings.SHAREPOINT_DOMAIN,
+                        username=settings.SHAREPOINT_EMAIL,
+                        password=settings.SHAREPOINT_PASSWORD,
+                        playwright=p,
+                        browser=browser,
+                        context=context,
+                    ) as sp,
+                    MailDealer(
+                        username=settings.MAIL_DEALER_USERNAME,
+                        password=settings.MAIL_DEALER_PASSWORD,
+                        playwright=p,
+                        browser=browser,
+                        context=context,
+                    ) as md,
+                ):
+                    logger.info("Tải dữ liệu từ WebAccess")
+                    data = wa.download_data(
+                        process_date=datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y/%m/%d"),
                     )
-                    if len(downloads) == 0:
-                        logger.warning("Không tìm thấy bản vẽ")
-                        data.at[index, "Result"] = "Không tìm thấy bản vẽ"
-                        continue
-                    if len(downloads) != 1:
-                        logger.warning(f"Có {len(downloads)} file bản vẽ")
-                        data.at[index, "Result"] = f"Có {len(downloads)} file bản vẽ"
-                        continue
-                    logger.info("Gửi mail")
-                    if not md.send_mail(
-                        to=mail_address,
-                        subject=f"東栄住宅 {row['物件名']} 軽天割付図送付",
-                        nouki=row["確定納期"],
-                        file=downloads[0],
-                    ):
-                        logger.warning("Gửi mail thất bại")
-                        data.at[index, "Result"] = "Gửi mail thất bại"
-                        continue
-                    logger.info("Cập nhật WebAccess")
-                    if not wa.update_state(case=str(row["案件番号"]), current_state=str(row["図面"])):
-                        logger.warning("Đã gửi mail | Cập nhật WebAccess lỗi")
-                        data.at[index, "Result"] = "Đã gửi mail | Cập nhật WebAccess lỗi"
-                        continue
-                    data.at[index, "Result"] = "Thành công"
-                logger.info("Lưu file kết quả")
-                # Upload to S3
-                excel_buffer = io.BytesIO()
-                data.to_excel(excel_buffer, index=False, engine="xlsxwriter")
-                excel_buffer.seek(0)
-                result = minio.put_object(
-                    bucket_name=settings.RESULT_BUCKET,
-                    object_name=f"GuiBanVeToei/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx",
-                    data=excel_buffer,
-                    length=excel_buffer.getbuffer().nbytes,
-                    content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    data = data[["案件番号", "得意先名", "物件名", "図面", "確定納期", "資料リンク"]].copy()
+                    data["Result"] = pd.NA
+                    for index, row in data.iterrows():
+                        logger.info(row)
+                        # Kiểm tra nouki
+                        if pd.isna(row["確定納期"]):
+                            logger.warning("Không có nouki")
+                            data.at[index, "Result"] = "Không có nouki"
+                            continue
+                        # Kiểm tra địa chỉ gửi
+                        mail_address = wa.mail_address(str(row["案件番号"]))
+                        if mail_address is None:
+                            logger.warning("Không tìm thấy mail nhận")
+                            data.at[index, "Result"] = "Không tìm thấy mail nhận"
+                            continue
+                        logger.info("Tải dữ liệu từ SharePoint")
+                        downloads = sp.download(
+                            url=row["資料リンク"],
+                            steps=[
+                                re.compile("^割付図・エクセル$"),
+                            ],
+                            file=re.compile(r"\.pdf$", re.IGNORECASE),
+                            save_to=temp_dir,
+                        )
+                        if len(downloads) == 0:
+                            logger.warning("Không tìm thấy bản vẽ")
+                            data.at[index, "Result"] = "Không tìm thấy bản vẽ"
+                            continue
+                        if len(downloads) != 1:
+                            logger.warning(f"Có {len(downloads)} file bản vẽ")
+                            data.at[index, "Result"] = f"Có {len(downloads)} file bản vẽ"
+                            continue
+                        logger.info("Gửi mail")
+                        if not md.send_mail(
+                            to=mail_address,
+                            subject=f"東栄住宅 {row['物件名']} 軽天割付図送付",
+                            nouki=row["確定納期"],
+                            file=downloads[0],
+                        ):
+                            logger.warning("Gửi mail thất bại")
+                            data.at[index, "Result"] = "Gửi mail thất bại"
+                            continue
+                        logger.info("Cập nhật WebAccess")
+                        if not wa.update_state(case=str(row["案件番号"]), current_state=str(row["図面"])):
+                            logger.warning("Đã gửi mail | Cập nhật WebAccess lỗi")
+                            data.at[index, "Result"] = "Đã gửi mail | Cập nhật WebAccess lỗi"
+                            continue
+                        data.at[index, "Result"] = "Thành công"
+                    logger.info("Lưu file kết quả")
+                    # Upload to S3
+                    excel_buffer = io.BytesIO()
+                    data.to_excel(excel_buffer, index=False, engine="xlsxwriter")
+                    excel_buffer.seek(0)
+                    result = minio.put_object(
+                        bucket_name=settings.RESULT_BUCKET,
+                        object_name=f"GuiBanVeToei/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx",
+                        data=excel_buffer,
+                        length=excel_buffer.getbuffer().nbytes,
+                        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    )
+                    return f"{settings.RESULT_BUCKET}/{result.object_name}"
+            except Exception as e:
+                trace_file = os.path.join(temp_dir, f"{self.request.id}.zip")
+                context.tracing.stop(path=trace_file)
+                minio.fput_object(
+                    bucket_name=settings.TRACE_BUCKET,
+                    object_name=os.path.basename(trace_file),
+                    file_path=trace_file,
+                    content_type="application/zip",
                 )
-                return f"{settings.RESULT_BUCKET}/{result.object_name}"
-    logger.info("Hoàn thành")
+                raise e

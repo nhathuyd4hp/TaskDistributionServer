@@ -40,6 +40,7 @@ def seikyu(
     ):
         browser = p.chromium.launch(headless=False, args=["--start-maximized"])
         context = browser.new_context(no_viewport=True)
+        context.tracing.start(screenshots=True, snapshots=True, sources=True)
         # --- #
         SeikyuFile: str = (
             "≪ベトナム≫請求書　阪和以外　(9日AM(10日分)、14日AM(15日分)、19日AM(20日分)、29日AM(末日分)に完成).xlsm"

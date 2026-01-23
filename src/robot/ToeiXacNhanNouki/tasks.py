@@ -176,7 +176,6 @@ def run(
                                         web_access_endtime = datetime.datetime.strptime(row["確定納期"], "%Y/%m/%d")
                                     except Exception as e:
                                         logger.error(e)
-                                        pass
                                     try:
                                         data.append(
                                             [
@@ -259,8 +258,8 @@ def run(
                         web_access_endtime = None
                         try:
                             web_access_endtime = datetime.datetime.strptime(row["確定納期"], "%y/%m/%d")
-                        except ValueError:
-                            web_access_endtime = datetime.datetime.strptime(row["確定納期"], "%Y/%m/%d")
+                        except ValueError as e:
+                            logger.error(e)
                         except Exception as e:
                             logger.error(e)
                         data.append(

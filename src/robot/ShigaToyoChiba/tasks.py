@@ -117,6 +117,7 @@ def shiga_toyo_chiba(
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=False, args=["--start-maximized"])
                 context = browser.new_context(no_viewport=True)
+                context.tracing.start(screenshots=True, snapshots=True, sources=True)
                 with WebAccess(
                     username=settings.WEBACCESS_USERNAME,
                     password=settings.WEBACCESS_PASSWORD,
@@ -187,6 +188,7 @@ def shiga_toyo_chiba(
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=False, args=["--start-maximized"])
             context = browser.new_context(no_viewport=True)
+            context.tracing.start(screenshots=True, snapshots=True, sources=True)
             with (
                 SharePoint(
                     domain=settings.SHAREPOINT_DOMAIN,

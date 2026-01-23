@@ -86,12 +86,13 @@ def main(
                     content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
                 return f"{settings.RESULT_BUCKET}/{result.object_name}"
-        except Exception:
+        except Exception as e:
             trace_file = os.path.join(temp_dir, f"{task_id}.zip")
             context.tracing.stop(path=trace_file)
             minio.fput_object(
                 bucket_name=settings.TRACE_BUCKET,
                 object_name=os.path.basename(trace_file),
-                file_path=result_path,
-                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                file_path=trace_file,
+                content_type="application/zip",
             )
+            raise e

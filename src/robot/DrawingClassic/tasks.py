@@ -1,4 +1,5 @@
 import io
+import os
 import re
 import tempfile
 from datetime import datetime
@@ -27,100 +28,112 @@ def gui_ban_ve_xac_nhan_classic(
         sync_playwright() as p,
         tempfile.TemporaryDirectory() as temp_dir,
     ):
-        browser = p.chromium.launch(headless=False, args=["--start-maximized"])
-        context = browser.new_context(no_viewport=True)
-        with (
-            WebAccess(
-                username=settings.WEBACCESS_USERNAME,
-                password=settings.WEBACCESS_PASSWORD,
-                playwright=p,
-                browser=browser,
-                context=context,
-            ) as wa,
-            SharePoint(
-                domain=settings.SHAREPOINT_DOMAIN,
-                username=settings.SHAREPOINT_EMAIL,
-                password=settings.SHAREPOINT_PASSWORD,
-                playwright=p,
-                browser=browser,
-                context=context,
-            ) as sp,
-            AndPad(
-                domain="https://work.andpad.jp/",
-                username="clasishome@nsk-cad.com",
-                password="nsk159753",
-                playwright=p,
-                browser=browser,
-                context=context,
-            ) as ap,
-        ):
-            logger.info("WebAccess - download data")
-            orders = wa.download_data(building="クラシスホーム")
-            orders = orders[orders["確未"] == "未"]
-            orders = orders[["案件番号", "得意先名", "物件名", "確定納期", "担当2", "資料リンク"]]
-            logger.info(orders.shape)
-            orders["Result"] = pd.NA
-            # ---- #
-            for index, row in orders.iterrows():
-                _, _, 物件名, 確定納期, 担当2, 資料リンク, _ = row
-                logger.info(f"{物件名} - {確定納期} - {担当2} - {資料リンク}")
-                if pd.isna(物件名):
-                    logger.warning("物件名 is null")
-                    continue
-                if pd.isna(資料リンク):
-                    logger.warning("資料リンク is null")
-                    continue
-                if pd.isna(確定納期):
-                    logger.warning("確定納期 is null")
-                    continue
-                if pd.isna(担当2):
-                    logger.warning("担当2 is null")
-                    continue
-                logger.info("Download PDF")
-                downloads = sp.download_files(
-                    url=資料リンク,
-                    file=re.compile(r".*\.pdf$", re.IGNORECASE),
-                    steps=[
-                        re.compile("^割付図・エクセル$"),
-                    ],
-                    save_to=temp_dir,
+        try:
+            browser = p.chromium.launch(headless=False, args=["--start-maximized"])
+            context = browser.new_context(no_viewport=True)
+            context.tracing.start(screenshots=True, snapshots=True, sources=True)
+            with (
+                WebAccess(
+                    username=settings.WEBACCESS_USERNAME,
+                    password=settings.WEBACCESS_PASSWORD,
+                    playwright=p,
+                    browser=browser,
+                    context=context,
+                ) as wa,
+                SharePoint(
+                    domain=settings.SHAREPOINT_DOMAIN,
+                    username=settings.SHAREPOINT_EMAIL,
+                    password=settings.SHAREPOINT_PASSWORD,
+                    playwright=p,
+                    browser=browser,
+                    context=context,
+                ) as sp,
+                AndPad(
+                    domain="https://work.andpad.jp/",
+                    username="clasishome@nsk-cad.com",
+                    password="nsk159753",
+                    playwright=p,
+                    browser=browser,
+                    context=context,
+                ) as ap,
+            ):
+                logger.info("WebAccess - download data")
+                orders = wa.download_data(building="クラシスホーム")
+                orders = orders[orders["確未"] == "未"]
+                orders = orders[["案件番号", "得意先名", "物件名", "確定納期", "担当2", "資料リンク"]]
+                logger.info(orders.shape)
+                orders["Result"] = pd.NA
+                # ---- #
+                for index, row in orders.iterrows():
+                    _, _, 物件名, 確定納期, 担当2, 資料リンク, _ = row
+                    logger.info(f"{物件名} - {確定納期} - {担当2} - {資料リンク}")
+                    if pd.isna(物件名):
+                        logger.warning("物件名 is null")
+                        continue
+                    if pd.isna(資料リンク):
+                        logger.warning("資料リンク is null")
+                        continue
+                    if pd.isna(確定納期):
+                        logger.warning("確定納期 is null")
+                        continue
+                    if pd.isna(担当2):
+                        logger.warning("担当2 is null")
+                        continue
+                    logger.info("Download PDF")
+                    downloads = sp.download_files(
+                        url=資料リンク,
+                        file=re.compile(r".*\.pdf$", re.IGNORECASE),
+                        steps=[
+                            re.compile("^割付図・エクセル$"),
+                        ],
+                        save_to=temp_dir,
+                    )
+                    if len(downloads) != 1:
+                        logger.warning(f"{len(downloads)} PDF")
+                        orders.at[index, "Result"] = f"{len(downloads)} file PDF"
+                        continue
+                    logger.info("Send message")
+                    orders.at[index, "Result"] = ap.send_message(
+                        object_name=物件名,
+                        message=f"""いつもお世話になっております。
+    現場：{物件名}
+    {"/".join(確定納期.split("/")[1:])}倉庫入れ予定です。
+    上記の現場、まだ図面承認されていませんので、
+    お手数をおかけしますが、配送・製造段取りの為、 至急承認お願い致します。
+    よろしくお願いいたします。
+    """,
+                        tags=["配送管理･追加発注(大前)", "林(拓) [資材課]", 担当2],
+                        attachments=downloads[0],
+                    )
+                # --- Upload to Minio
+                # 1. Khởi tạo buffer dạng BytesIO (vì Excel là binary)
+                excel_buffer = io.BytesIO()
+
+                # 2. Ghi dataframe vào buffer dưới dạng Excel
+                # Lưu ý: Cần cài thư viện openpyxl (pip install openpyxl)
+                orders.to_excel(excel_buffer, index=False, engine="openpyxl")
+
+                # 3. Đưa con trỏ về đầu file để chuẩn bị đọc
+                excel_buffer.seek(0)
+
+                result = minio.put_object(
+                    bucket_name=settings.RESULT_BUCKET,
+                    # SỬA Ở ĐÂY: đổi đuôi file thành .xlsx
+                    object_name=f"DrawingClassic/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx",
+                    data=excel_buffer,
+                    length=excel_buffer.getbuffer().nbytes,
+                    # SỬA Ở ĐÂY: đổi content_type sang định dạng Excel
+                    content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
-                if len(downloads) != 1:
-                    logger.warning(f"{len(downloads)} PDF")
-                    orders.at[index, "Result"] = f"{len(downloads)} file PDF"
-                    continue
-                logger.info("Send message")
-                orders.at[index, "Result"] = ap.send_message(
-                    object_name=物件名,
-                    message=f"""いつもお世話になっております。
-現場：{物件名}
-{"/".join(確定納期.split("/")[1:])}倉庫入れ予定です。
-上記の現場、まだ図面承認されていませんので、
-お手数をおかけしますが、配送・製造段取りの為、 至急承認お願い致します。
-よろしくお願いいたします。
-""",
-                    tags=["配送管理･追加発注(大前)", "林(拓) [資材課]", 担当2],
-                    attachments=downloads[0],
-                )
-            # --- Upload to Minio
-            # 1. Khởi tạo buffer dạng BytesIO (vì Excel là binary)
-            excel_buffer = io.BytesIO()
 
-            # 2. Ghi dataframe vào buffer dưới dạng Excel
-            # Lưu ý: Cần cài thư viện openpyxl (pip install openpyxl)
-            orders.to_excel(excel_buffer, index=False, engine="openpyxl")
-
-            # 3. Đưa con trỏ về đầu file để chuẩn bị đọc
-            excel_buffer.seek(0)
-
-            result = minio.put_object(
-                bucket_name=settings.RESULT_BUCKET,
-                # SỬA Ở ĐÂY: đổi đuôi file thành .xlsx
-                object_name=f"DrawingClassic/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx",
-                data=excel_buffer,
-                length=excel_buffer.getbuffer().nbytes,
-                # SỬA Ở ĐÂY: đổi content_type sang định dạng Excel
-                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                return f"{settings.RESULT_BUCKET}/{result.object_name}"
+        except Exception as e:
+            trace_file = os.path.join(temp_dir, f"{self.request.id}.zip")
+            context.tracing.stop(path=trace_file)
+            minio.fput_object(
+                bucket_name=settings.TRACE_BUCKET,
+                object_name=os.path.basename(trace_file),
+                file_path=trace_file,
+                content_type="application/zip",
             )
-
-            return f"{settings.RESULT_BUCKET}/{result.object_name}"
+            raise e
