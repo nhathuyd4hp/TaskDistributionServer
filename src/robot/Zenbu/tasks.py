@@ -42,7 +42,7 @@ def Zenbu(
     exe_path = Path(__file__).resolve().parents[2] / "robot" / "Zenbu" / "Main.py"
 
     dst_path = str(exe_path.parent / os.path.basename(src_path))
-    shutil.move(src_path, str(exe_path.parent / os.path.basename(src_path)))
+    shutil.move(src_path, dst_path)
 
     with open(log_file, "w", encoding="utf-8", errors="ignore") as f:
         process = subprocess.Popen(
