@@ -51,9 +51,9 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'My Site',
+      title: 'RPA Control Center',
       logo: {
-        alt: 'My Site Logo',
+        alt: 'logo',
         src: 'img/logo.svg',
       },
       items: [
