@@ -10,7 +10,7 @@
 | **Migration** | [Alembic](https://alembic.sqlalchemy.org/)
 | **Real-time** | [Socket.IO](https://socket.io/)
 | **Package Manager** | [uv](https://github.com/astral-sh/uv)
-| **Plugin ** | C++
+| **Plugin** | [C++](https://cplusplus.com)
 ## 🚀 Cài đặt & Chạy dự án
 
 ### 1. Yêu cầu tiên quyết
