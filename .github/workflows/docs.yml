@@ -2,7 +2,7 @@ name: Docusaurus
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feature/document ]
     paths:
       - docs/**
       - .github/workflows/docs.yml
