@@ -89,7 +89,6 @@ def Zenbu(
         bucket_name=settings.RESULT_BUCKET,
         object_name=f"Zenbu/{self.request.id}/Zenbu.zip",
         file_path=str(zip_path),
-        file_path=str(zip_path),
         content_type="application/zip",
     )
     return f"{settings.RESULT_BUCKET}/{result.object_name}"
