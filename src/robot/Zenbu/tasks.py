@@ -78,7 +78,7 @@ def Zenbu(
         exe_path.parent / "Ankens",
         exe_path.parent / "ProgressReports",
     ]
-    zip_path = exe_path / "Zenbu.zip"
+    zip_path = exe_path.parent / "Zenbu.zip"
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for folder in paths:
             for root, _, files in os.walk(folder):
@@ -92,4 +92,12 @@ def Zenbu(
         file_path=str(zip_path),
         content_type="application/zip",
     )
+    for p in paths:
+        with contextlib.suppress(Exception):
+            if p.is_file():
+                p.unlink()
+            if p.is_dir():
+                shutil.rmtree(p)
+    with contextlib.suppress(Exception):
+        zip_path.unlink()
     return f"{settings.RESULT_BUCKET}/{result.object_name}"
