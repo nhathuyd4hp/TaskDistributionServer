@@ -50,7 +50,7 @@ def Zenbu(
                 sys.executable,
                 str(exe_path),
                 "--file",
-                src_path,
+                str(dst_path),
             ],
             cwd=str(exe_path.parent),
             stdout=f,
