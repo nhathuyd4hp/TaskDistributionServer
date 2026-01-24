@@ -4,13 +4,13 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'RPA Control Center',
-  tagline: 'Dinosaurs are cool',
+  tagline: 'Robotic Process Automation',
   favicon: 'img/favicon.ico',
   future: {
     v4: true,
   },
-  url: 'https://your-docusaurus-site.example.com',
-  baseUrl: '/',
+  url: 'https://nhathuyd4hp.github.io',
+  baseUrl: '/RPAControlCenter',
   organizationName: 'facebook',
   projectName: 'docusaurus',
   onBrokenLinks: 'throw',
