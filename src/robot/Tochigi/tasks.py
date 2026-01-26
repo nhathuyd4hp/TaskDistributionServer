@@ -328,7 +328,7 @@ def tochigi(self, process_date: datetime | str):
                         has_pdf = any(f.lower().endswith(".pdf") for f in counts)
                         excel_exts = (".xls", ".xlsx", ".xlsm", ".xlsb", ".xlt", ".xltx", ".xltm")
                         excel_count = sum(1 for f in counts if f.lower().endswith(excel_exts))
-                        if not has_pdf or excel_count < floors:
+                        if not has_pdf:
                             while True:
                                 logger.warning("Không đủ data")
                                 if api.write(
@@ -336,13 +336,26 @@ def tochigi(self, process_date: datetime | str):
                                     drive_id=DataTochigi_DriveID,
                                     item_id=DataTochigi_ItemID,
                                     range=f"G{upload_file_index+2}",
-                                    data=[["Không đủ data"]],
+                                    data=[["Không có PDF"]],
                                 ):
                                     break
                                 time.sleep(0.5)
                             break
-                        pdf_dir = os.path.abspath(f"downloads/{案件番号}/pdf")
-                        excel_dir = os.path.abspath(f"downloads/{案件番号}/excel")
+                        if excel_count < floors:
+                            while True:
+                                logger.warning("Không đủ data")
+                                if api.write(
+                                    site_id=DataTochigi_SiteID,
+                                    drive_id=DataTochigi_DriveID,
+                                    item_id=DataTochigi_ItemID,
+                                    range=f"G{upload_file_index+2}",
+                                    data=[[f"{excel_count} excels /{floors}"]],
+                                ):
+                                    break
+                                time.sleep(0.5)
+                            break
+                        pdf_dir = os.path.join(temp_dir, f"downloads/{案件番号}/pdf")
+                        excel_dir = os.path.join(temp_dir, f"downloads/{案件番号}/excel")
                         os.makedirs(name=pdf_dir, exist_ok=True)
                         os.makedirs(name=excel_dir, exist_ok=True)
 
