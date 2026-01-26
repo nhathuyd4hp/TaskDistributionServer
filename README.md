@@ -11,6 +11,18 @@
 | **Real-time** | [Socket.IO](https://socket.io/)
 | **Package Manager** | [uv](https://github.com/astral-sh/uv)
 | **Plugin** | [C++](https://cplusplus.com)
+
+<a title="Python" href="https://www.python.org/">
+  <img
+    src="https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54"
+  />
+</a>
+<a title="FastAPI" href="https://fastapi.tiangolo.com/">
+  <img
+    src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi"
+  />
+</a>
+
 ## 🚀 Cài đặt & Chạy dự án
 
 ### 1. Yêu cầu tiên quyết
