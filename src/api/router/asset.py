@@ -47,7 +47,7 @@ async def get_asset(bucket: str, objectName: str = Query(...)):
     def iterfile():
         try:
             while True:
-                chunk = obj.read(1024 * 1024)
+                chunk = obj.read(64 * 1024)
                 if not chunk:
                     break
                 yield chunk
