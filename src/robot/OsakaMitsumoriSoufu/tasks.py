@@ -46,7 +46,7 @@ def OsakaMitsumoriSoufu(self):
 
     result = minio.fput_object(
         bucket_name=settings.RESULT_BUCKET,
-        object_name=f"OsakaMitsumoriSoufu/{self.request.id}/{os.path.basename(latest_pdf)}.xlsx",
+        object_name=f"OsakaMitsumoriSoufu/{self.request.id}/{os.path.basename(latest_pdf)}",
         file_path=str(latest_pdf),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
