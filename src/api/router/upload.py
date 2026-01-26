@@ -41,8 +41,24 @@ async def upload_asset(file: UploadFile = File(...)):
 )
 async def get_asset(bucket: str, objectName: str = Query(...)):
     obj = minio.get_object(bucket, objectName)
+    file_name = Path(objectName).name
+    file_size = obj.headers.get("Content-Length")
+
+    def iterfile():
+        try:
+            while True:
+                chunk = obj.read(1024 * 1024)
+                if not chunk:
+                    break
+                yield chunk
+        finally:
+            obj.close()
+
     return StreamingResponse(
-        obj,
+        iterfile(),
         media_type=obj.headers.get("Content-Type", "application/octet-stream"),
-        headers={"Content-Disposition": f'attachment; filename="{Path(objectName).name}"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="{file_name}"',
+            "Content-Length": file_size or "",
+        },
     )
