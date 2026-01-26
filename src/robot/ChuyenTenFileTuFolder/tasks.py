@@ -50,7 +50,6 @@ def main(
         try:
             browser = p.chromium.launch(headless=False, args=["--start-maximized"])
             context = browser.new_context(no_viewport=True)
-            context.tracing.start(screenshots=True, snapshots=True, sources=True)
             logger.info("login sharepoint")
             with SharePoint(
                 domain=settings.SHAREPOINT_DOMAIN,
@@ -76,7 +75,6 @@ def main(
                         file = match.group(1)
                     file = re.sub(r"\([^)]*(am|pm)[^)]*\)", "", file, flags=re.IGNORECASE)
                     files[i] = file
-                logger.info(f"[Scan] Total files found: {len(files)}")
                 result_path = os.path.join(temp_dir, "filenames.xlsx")
                 pd.DataFrame({"filename": files}).to_excel(result_path, index=False)
                 result = minio.fput_object(
@@ -87,12 +85,4 @@ def main(
                 )
                 return f"{settings.RESULT_BUCKET}/{result.object_name}"
         except Exception as e:
-            trace_file = os.path.join(temp_dir, f"{task_id}.zip")
-            context.tracing.stop(path=trace_file)
-            minio.fput_object(
-                bucket_name=settings.TRACE_BUCKET,
-                object_name=os.path.basename(trace_file),
-                file_path=trace_file,
-                content_type="application/zip",
-            )
             raise e

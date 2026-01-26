@@ -82,10 +82,10 @@ class SharePoint:
         steps: List[str | re.Pattern] | None = None,
         save_to: str | None = None,
     ) -> List[str]:
+        downloads = []
         self.logger.info(f"Download {file} - {url}")
         try:
             self.page.bring_to_front()
-            downloads = []
             self.page.goto(url=url)
             self.page.wait_for_selector(
                 selector="div[class='app-container']",
@@ -149,10 +149,10 @@ class SharePoint:
                 selector="span[role='button'][data-id='heroField']",
                 has_text=file,
             )
+            self.logger.info(f"[Scan] Total files found: {len(items.count())}")
             for i in range(items.count()):
                 item = items.nth(i)
                 item.scroll_into_view_if_needed()
-                item.wait_for(state="visible", timeout=5000)
                 item.click(button="right")
                 download_btn = self.page.locator(
                     "button[data-automationid='downloadCommand'][role='menuitem']:not([type='button'])"
