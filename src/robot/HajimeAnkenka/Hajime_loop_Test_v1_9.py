@@ -13,7 +13,7 @@ import win32com.client
 from config_access_token import token_file  # noqa
 from Nasiwak import *  # noqa
 from openpyxl import load_workbook
-from pynput.keyboard import Controller, Key
+from pywinauto import Desktop
 from selenium import webdriver
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.chrome.options import Options
@@ -1141,57 +1141,35 @@ def fileUpload(folder_path, ankenmei, ProjectNumber, builder):
         driver.get(sendai)
         time.sleep(5)
 
-    keyboard = Controller()
-
+    for win in Desktop(backend="win32").windows():
+        if win.window_text() == "Select Folder to Upload":
+            win.post_message(0x0010)
+            break
+    time.sleep(2)
     try:
-        # click on upload
+        # Click on upload
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.XPATH, sharepoint_config["xpaths"]["upload"]))
         ).click()
         time.sleep(2)
 
-        # click on folder
+        # Click on folder
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, sharepoint_config["xpaths"]["folder"]))
         ).click()
         time.sleep(2)
 
-        # send path to upload files
-        keyboard.type(upload_path)
-        time.sleep(3)
+        # Upload
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file']"))
+        ).send_keys(upload_path)
+        time.sleep(2)
 
-        # press enter to upload files (for windows pop-up)
-        keyboard.press(Key.enter)
-        time.sleep(0.5)
-        keyboard.release(Key.enter)
-        time.sleep(1)
-
-        keyboard.press(Key.enter)
-        time.sleep(0.5)
-        keyboard.release(Key.enter)
-        time.sleep(1)
-
-        try:
-            alert = WebDriverWait(driver, 10).until(EC.alert_is_present())
-            alert.accept()
-        except Exception:
-            keyboard.press(Key.tab)
-            keyboard.release(Key.tab)
-            time.sleep(1)
-
-            keyboard.press(Key.enter)
-            keyboard.release(Key.enter)
-            time.sleep(1)
-
-        try:
-            # check for "uploaded" text
-            WebDriverWait(driver, 200).until(
-                EC.presence_of_element_located((By.XPATH, sharepoint_config["xpaths"]["uploaded_text"]))
-            )
-            logging.info("Files uploaded successfully to Sharepoint")
-            time.sleep(0.5)
-        except Exception:
-            logging.error(f"Upload probably failed, Pls check manually - {ProjectNumber}")
+        for win in Desktop(backend="win32").windows():
+            if win.window_text() == "Select Folder to Upload":
+                win.post_message(0x0010)
+                break
+        time.sleep(2)
 
     except Exception as e:
         logging.error(f"Upload probably failed: {e}")
