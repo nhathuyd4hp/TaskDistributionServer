@@ -5,9 +5,12 @@ import typing
 from datetime import datetime
 from pathlib import Path
 
+import redis
 from celery import shared_task
 
 from src.core.config import settings
+from src.core.logger import Log
+from src.core.redis import REDIS_POOL
 from src.service import ResultService as minio
 
 
@@ -17,6 +20,7 @@ def FuriwakeOsaka(
     工場: typing.Literal["大阪工場 製造データ", "栃木工場"],
     日付: datetime | str,
 ):
+    logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     if isinstance(日付, str):
         日付 = datetime.fromisoformat(日付)
     日付: str = f"{日付.month}月{日付.day:02d}日"
@@ -68,4 +72,9 @@ def FuriwakeOsaka(
         file_path=str(latest_file),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
+    try:
+        latest_file.unlink(missing_ok=True)
+        shutil.rmtree(result_dir, ignore_errors=True)
+    except Exception as e:
+        logger.error(e)
     return f"{settings.RESULT_BUCKET}/{result.object_name}"

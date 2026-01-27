@@ -17,6 +17,15 @@ from src.model.runs import Status
 @signals.worker_ready.connect
 def start_up(sender: Consumer, **kwargs):
     with Session(settings.db_engine) as session:
+        # ----- PENDING ----- #
+        statement = select(Runs).where(Runs.status == Status.WAITING)
+        records: list[Runs] = session.exec(statement).all()
+        for record in records:
+            result = AsyncResult(id=record.id, app=sender.app)
+            if result.state in [states.PENDING]:
+                record.status = Status.FAILURE
+                session.add(record)
+        # ----- PENDING ----- #
         statement = select(Runs).where(Runs.status == Status.PENDING)
         records: list[Runs] = session.exec(statement).all()
         for record in records:

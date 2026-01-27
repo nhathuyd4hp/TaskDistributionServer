@@ -88,7 +88,7 @@ class SharePoint:
             self.page.bring_to_front()
             self.page.goto(url=url)
             self.page.wait_for_selector(
-                selector="div[class='app-container']",
+                "div[class='app-container'], div[data-automation-id='mainScrollRegionInnerContent']",
                 timeout=10000,
                 state="visible",
             )
@@ -127,8 +127,10 @@ class SharePoint:
                 grid.evaluate("el => el.scrollTop = el.scrollHeight")
                 self.page.wait_for_timeout(5000)
             # ----- Apply filter ---- #
-            self.page.locator(selector="div[aria-label='Type'][role='button']").click()
-            self.page.locator(selector="span", has_text="Filter by").click()
+            self.page.locator(
+                selector="div[aria-label='Type'][role='button'], div[aria-label='種類'][role='button']"
+            ).click()
+            self.page.locator(selector="span", has_text=re.compile("Filter by|フィルター基準")).click()
             self.page.locator("div[class^='ms-Panel-commands']").wait_for(state="visible")
             time.sleep(2.5)
             # ----- #
@@ -176,19 +178,27 @@ class SharePoint:
                     break
                 time.sleep(0.5)
                 self.page.locator(selector="div[tag='columnheader'][data-automationid='row-selection-header']").click()
-                with self.page.expect_download() as download_info:
-                    self.page.locator(selector="button[data-automationid='downloadCommand']").click()
-                download = download_info.value
-                if save_to:
-                    save_path = os.path.join(save_to, download.suggested_filename)
-                else:
-                    save_path = os.path.abspath(download.suggested_filename)
-                os.makedirs(os.path.dirname(save_path), exist_ok=True)
-                download.save_as(save_path)
-                self.logger.info(f"Save {save_path}")
-                with zipfile.ZipFile(save_path, "r") as zip_ref:
-                    zip_ref.extractall(save_to)
-                os.remove(save_path)
+            try:
+                self.page.locator(selector="button[data-automationid='downloadCommand']").wait_for(
+                    state="visible", timeout=10000
+                )
+            except TimeoutError:
+                self.page.locator("button[data-automationid='more']").click()
+            with self.page.expect_download() as download_info:
+                self.page.locator(selector="button[data-automationid='downloadCommand']").click()
+            download = download_info.value
+            if save_to:
+                save_path = os.path.join(save_to, download.suggested_filename)
+            else:
+                save_path = os.path.abspath(download.suggested_filename)
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            download.save_as(save_path)
+            self.logger.info(f"Save {save_path}")
+            with zipfile.ZipFile(save_path, "r") as zip_ref:
+                zip_ref.extractall(save_to)
+            os.remove(save_path)
+            for file in os.listdir(save_to):
+                self.logger.info(file)
             return os.listdir(save_to)
         except TimeoutError as e:
             tb = traceback.extract_tb(sys.exc_info()[2])
