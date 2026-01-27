@@ -2,20 +2,16 @@ import asyncio
 import json
 import os
 import time
-import uuid
 from collections import defaultdict
 from contextlib import asynccontextmanager, suppress
 from datetime import datetime
 
 import redis.asyncio as redis
 from apscheduler.triggers.cron import CronTrigger
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
-from fastapi.openapi.docs import get_redoc_html
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi.responses import JSONResponse
 from sqlmodel import Session
 
-from src.api.common.response import SuccessResponse
-from src.api.dependency import required_admin
 from src.api.middleware import GlobalExceptionMiddleware
 from src.api.router import api
 from src.core.config import settings
@@ -162,17 +158,9 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
-    openapi_url=f"/{uuid.uuid4()}.json",
+    openapi_url="/docs.json",
 )
 app.add_middleware(GlobalExceptionMiddleware)
-
-
-@app.get("/redocs", include_in_schema=False, response_class=HTMLResponse)
-async def documentation(_: str = Depends(required_admin)):
-    return get_redoc_html(
-        openapi_url=app.openapi_url,
-        title=app.title + " - Documentation",
-    )
 
 
 app.include_router(api, prefix=settings.ROOT_PATH)
@@ -196,12 +184,6 @@ async def websocket_channel(websocket: WebSocket, channel: str | None = None):
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-
-
-@app.post(path="/broadcast", tags=["WebSocket"])
-async def broadcast_message(message: str, task: BackgroundTasks):
-    task.add_task(manager.broadcast, message)
-    return SuccessResponse(data=message)
 
 
 # Handle Exception

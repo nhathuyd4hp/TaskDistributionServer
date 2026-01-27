@@ -59,9 +59,6 @@ class Settings(BaseSettings):
     API_SHAREPOINT_TENANT_ID: str
     API_SHAREPOINT_CLIENT_ID: str
     API_SHAREPOINT_CLIENT_SECRET: str
-    # ADMIN ACCOUNT
-    ADMIN_USERNAME: str
-    ADMIN_PASSWORD: str
 
     @computed_field
     @property
