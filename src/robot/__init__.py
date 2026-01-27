@@ -31,3 +31,4 @@ from src.robot.Zenbu import tasks  # noqa
 from src.robot.KeiaiNoukiIrai import tasks  # noqa
 from src.robot.FuriwakeToyoChibaShigaKyushu import tasks  # noqa
 from src.robot.HajimeAnkenka import tasks  # noqa
+from src.robot.KizukuNoukikakunin import tasks  # noqa
