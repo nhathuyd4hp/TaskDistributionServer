@@ -1159,17 +1159,17 @@ def fileUpload(folder_path, ankenmei, ProjectNumber, builder):
         ).click()
         time.sleep(2)
 
-        # Upload
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file']"))
-        ).send_keys(upload_path)
-        time.sleep(2)
-
         for win in Desktop(backend="win32").windows():
             if win.window_text() == "Select Folder to Upload":
                 win.post_message(0x0010)
                 break
         time.sleep(2)
+
+        # Upload
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file']"))
+        ).send_keys(upload_path)
+        time.sleep(15)
 
     except Exception as e:
         logging.error(f"Upload probably failed: {e}")
