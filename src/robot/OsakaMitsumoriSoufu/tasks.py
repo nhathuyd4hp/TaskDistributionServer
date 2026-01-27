@@ -1,3 +1,4 @@
+import contextlib
 import os
 import shutil
 import subprocess
@@ -50,4 +51,8 @@ def OsakaMitsumoriSoufu(self):
         file_path=str(latest_pdf),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
+    with contextlib.suppress(Exception):
+        latest_pdf.unlink()
+        shutil.rmtree(reports_folder)
+
     return f"{settings.RESULT_BUCKET}/{result.object_name}"

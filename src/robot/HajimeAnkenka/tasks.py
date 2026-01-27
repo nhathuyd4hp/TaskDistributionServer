@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -42,5 +43,17 @@ def HajimeAnkenka(self: Task):
         file_path=str(result_file),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
+
+    paths = [
+        exe_path.parent / "Access_token",
+        exe_path.parent / "Hajime_shinki_bot_logs",
+        exe_path.parent / "Access_token_log.txt",
+    ]
+
+    for path in paths:
+        if path.is_dir():
+            shutil.rmtree(path, ignore_errors=True)
+        if path.is_file():
+            path.unlink(missing_ok=True)
 
     return f"{settings.RESULT_BUCKET}/{result.object_name}"
