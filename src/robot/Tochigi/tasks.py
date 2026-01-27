@@ -350,7 +350,7 @@ def tochigi(self, process_date: datetime | str):
                                     drive_id=DataTochigi_DriveID,
                                     item_id=DataTochigi_ItemID,
                                     range=f"G{upload_file_index+2}",
-                                    data=[["Không có PDF"]],
+                                    data=[["Không có data"]],
                                 ):
                                     break
                                 time.sleep(0.5)

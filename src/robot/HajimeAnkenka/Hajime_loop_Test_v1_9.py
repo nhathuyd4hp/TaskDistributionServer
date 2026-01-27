@@ -35,7 +35,7 @@ if not os.path.exists(log_dir):
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s  - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler(f"{log_file_path}"), logging.StreamHandler()],
+    handlers=[logging.FileHandler(f"{log_file_path}"), logging.StreamHandler(sys.stdout)],
 )
 logging.info(f"Log file created: {log_file_path}")
 

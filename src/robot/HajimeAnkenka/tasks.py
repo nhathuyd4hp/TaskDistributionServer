@@ -8,13 +8,12 @@ from celery import shared_task
 from celery.app.task import Context, Task
 
 from src.core.config import settings
-from src.core.inactive_task import InactiveTask
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
 from src.service import ResultService as minio
 
 
-@shared_task(bind=True, name="Hajime Ankenka", base=InactiveTask)
+@shared_task(bind=True, name="Hajime Ankenka")
 def HajimeAnkenka(self: Task):
     context: Context = self.request
     id = context.id
