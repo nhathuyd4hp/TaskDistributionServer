@@ -10,12 +10,12 @@ router = APIRouter(prefix="/logs", tags=["Log"])
 
 async def streaming(run_id: str):
     file_path = f"logs/{run_id}.log"
-    start = asyncio.get_event_loop().time()
 
-    while not os.path.exists(file_path):
-        if asyncio.get_event_loop().time() - start > 10.0:
-            return
-        await asyncio.sleep(0.5)
+    while True:
+        if not os.path.exists(file_path):
+            await asyncio.sleep(5)
+            continue
+        break
 
     async with aiofiles.open(file_path, mode="r", encoding="cp932") as f:
         while True:
