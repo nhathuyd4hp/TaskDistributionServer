@@ -29,7 +29,7 @@ def link_data(factory: typing.Literal["Shiga", "Toyo", "Chiba"]) -> str:
 
 @shared_task(
     bind=True,
-    name="Chuyển tên File từ Folder",
+    name="Furiwake Toyo-Chiba-Shiga",
 )
 def main(
     self: Task,
