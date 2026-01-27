@@ -2,7 +2,7 @@ from celery import Celery
 
 from src.core.config import settings
 from src.robot import *  # noqa
-from src.worker_signals import *  # noqa - Thêm dòng này
+from src.worker_signals import *  # noqa
 
 Worker = Celery(
     "orchestration",

@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import shutil
@@ -9,10 +10,19 @@ import requests
 from dotenv import load_dotenv
 from msal import ConfidentialClientApplication
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--task-id", required=True)
+args = parser.parse_args()
+task_id = args.task_id
+log_path = Path(os.getcwd()).parent.parent / "logs" / f"{task_id}.log"
+log_path.parent.mkdir(parents=True, exist_ok=True)
+
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(name)s  - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler(f"{'Access_token_log.txt'}"), logging.StreamHandler()],
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler(log_path, encoding="utf-8"),
+    ],
 )
 logging.info("Access_token_log file created")
 

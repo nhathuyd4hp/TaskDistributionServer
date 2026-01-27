@@ -30,6 +30,8 @@ def HajimeAnkenka(self: Task):
             [
                 sys.executable,
                 str(exe_path),
+                "--task-id",
+                str(id),
             ],
             cwd=str(exe_path.parent),
             stdout=f,
@@ -39,11 +41,10 @@ def HajimeAnkenka(self: Task):
         )
         process.wait()
 
-    result_file = exe_path.parent / "Hajime_案件化.xlsm"
     result = minio.fput_object(
         bucket_name=settings.RESULT_BUCKET,
         object_name=f"HajimeAnkenka/{id}/Hajime.xlsm",
-        file_path=str(result_file),
+        file_path=str(exe_path.parent / "Hajime_案件化.xlsm"),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
