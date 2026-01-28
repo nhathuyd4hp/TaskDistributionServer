@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 
 import redis
 
@@ -27,6 +28,8 @@ class Log:
     def _initialize(cls):
         if cls._initialized:
             return
+
+        logging.Formatter.converter = time.gmtime
 
         cls.formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(message)s")
 
