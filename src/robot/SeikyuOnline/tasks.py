@@ -16,7 +16,7 @@ from src.core.redis import REDIS_POOL
 from src.core.type import API
 from src.robot.SeikyuOnline.api import APISharePoint
 from src.robot.SeikyuOnline.automation import SharePoint
-from src.service.result import ResultService
+from src.service.result import StorageService
 
 
 def get_chubo(excelPath: str) -> float:
@@ -167,7 +167,7 @@ def seikyu_online(self, sheet_name: API | str = "/api/type/seikyu-online"):
 
             with open(excel_file, "rb") as f:
                 data = f.read()
-            result = ResultService.put_object(
+            result = StorageService.put_object(
                 bucket_name=settings.RESULT_BUCKET,
                 object_name=f"SeikyuHanwa/{TaskID}/SeikyuHanwa.xlsm",
                 data=io.BytesIO(data),

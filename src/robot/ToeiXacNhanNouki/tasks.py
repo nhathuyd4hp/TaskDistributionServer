@@ -12,7 +12,7 @@ from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
 from src.robot.ToeiXacNhanNouki.automation import MailDealer, Touei, WebAccess
-from src.service import ResultService as minio
+from src.service import StorageService as minio
 
 TAB_NAME = None  # "新着"
 MAIL_BOX = "専用アドレス・飯田GH/≪ベトナム納期≫東栄(FAX・メール)"

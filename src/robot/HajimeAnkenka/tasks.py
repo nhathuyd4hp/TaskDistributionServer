@@ -10,7 +10,7 @@ from celery.app.task import Context, Task
 from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
-from src.service import ResultService as minio
+from src.service import StorageService as minio
 
 
 @shared_task(bind=True, name="Hajime Ankenka")

@@ -7,7 +7,7 @@ from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
 from src.robot.ShukoTaoSo.automation import AndPad, MailDealer, SharePoint
-from src.service import ResultService as minio
+from src.service import StorageService as minio
 
 
 def get_excel_path():

@@ -17,7 +17,7 @@ from src.core.logger import Log
 from src.core.redis import REDIS_POOL
 from src.robot.SeikyuNgoaiHanwa.api import APISharePoint
 from src.robot.SeikyuNgoaiHanwa.automation import Excel, SharePoint, WebAccess
-from src.service.result import ResultService
+from src.service.result import StorageService
 
 
 @shared_task(bind=True, name="Seikyu Ngoài Hanwa")
@@ -194,7 +194,7 @@ def seikyu(
         with open(result_path, "rb") as f:
             data = f.read()
 
-        result = ResultService.put_object(
+        result = StorageService.put_object(
             bucket_name=settings.RESULT_BUCKET,
             object_name=f"SeikyuNgoaiHanwa/{self.request.id}/seikuy_ngoai_hanwa.xlsm",
             data=io.BytesIO(data),

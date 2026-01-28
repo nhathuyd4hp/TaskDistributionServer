@@ -14,7 +14,7 @@ from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
 from src.robot.MejiIrisumiCheck.automation import SharePoint, WebAccess
-from src.service import ResultService as minio
+from src.service import StorageService as minio
 
 
 def search_目地(excelPath: str):

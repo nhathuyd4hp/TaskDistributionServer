@@ -12,7 +12,7 @@ from src.core.logger import Log
 from src.core.redis import REDIS_POOL
 from src.robot.GuiMailNoukiKakunin.api import APISharePoint
 from src.robot.GuiMailNoukiKakunin.automation import MailDealer
-from src.service import ResultService as minio
+from src.service import StorageService as minio
 
 
 @shared_task(bind=True, name="Gửi Mail Nouki Kakunin")

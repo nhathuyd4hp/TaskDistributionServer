@@ -7,7 +7,7 @@ from fastapi.responses import StreamingResponse
 
 from src.api.common.response import SuccessResponse
 from src.core.config import settings
-from src.service import ResultService as minio
+from src.service import StorageService as minio
 
 router = APIRouter(prefix="/assets", tags=["Upload"])
 

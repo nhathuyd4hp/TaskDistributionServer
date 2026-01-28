@@ -14,7 +14,7 @@ from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
 from src.robot.FuriwakeToyoChibaShigaKyushu.automation import SharePoint
-from src.service import ResultService as minio
+from src.service import StorageService as minio
 
 
 def link_data(factory: typing.Literal["Shiga", "Toyo", "Chiba", "Kyushu"]) -> str:

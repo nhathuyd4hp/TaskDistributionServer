@@ -17,8 +17,8 @@ from src.api.router import api
 from src.core.config import settings
 from src.core.redis import ASYNC_REDIS_POOL
 from src.scheduler import scheduler
-from src.service import ResultService as minio
 from src.service import ScheduleService
+from src.service import StorageService as minio
 from src.socket import manager
 from src.worker import Worker
 

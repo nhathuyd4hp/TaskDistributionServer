@@ -19,7 +19,7 @@ from src.core.logger import Log
 from src.core.redis import REDIS_POOL
 from src.core.type import UserCancelledError
 from src.robot.Sakura.automation.bot import MailDealer, SharePoint, WebAccess
-from src.service import ResultService as minio
+from src.service import StorageService as minio
 
 download_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "downloads")
 # -- Chrome Options

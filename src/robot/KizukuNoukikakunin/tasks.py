@@ -8,7 +8,7 @@ from celery import shared_task
 from celery.app.task import Context, Task
 
 from src.core.config import settings
-from src.service import ResultService as minio
+from src.service import StorageService as minio
 
 
 @shared_task(
