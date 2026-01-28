@@ -294,4 +294,6 @@ class APISharePoint:
             json=data,
             headers={"Authorization": f"Bearer {self._get_access_token()}", "Content-Type": "application/json"},
         )
-        return response.status_code == 200
+        if response.status_code == 200:
+            return True
+        return self.write(siteId, driveId, itemId, range, data, sheet)

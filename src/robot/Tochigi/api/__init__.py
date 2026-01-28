@@ -311,7 +311,9 @@ class APISharePoint:
             self.logger.error(response.json())
         else:
             self.logger.info(response.json())
-        return response.status_code == 200
+        if response.status_code == 200:
+            return True
+        return self.write(site_id, drive_id, item_id, range, data, sheet)
 
     def get_lists(
         self,
