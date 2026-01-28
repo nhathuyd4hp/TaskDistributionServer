@@ -62,8 +62,16 @@ def main(self: Task, file: io.BytesIO | str = "xlsx"):
     logs_folder = exe_path.parent / "Logs"
     access_token_folder = exe_path.parent / "Access_token"
     download_folder = exe_path.parent / "Downloaded_Zumen"
-    for path in (logs_folder, access_token_folder, download_folder):
-        shutil.rmtree(path, ignore_errors=True)
+    Access_token_log = exe_path.parent / "Downloaded_Zumen"
+    for path in (logs_folder, access_token_folder, download_folder, Access_token_log):
+        if path.is_dir():
+            shutil.rmtree(path, ignore_errors=True)
+        if path.is_file():
+            path.unlink()
+
+    for ext in ("*.png", "*.jpg", "*.jpeg"):
+        for img_file in exe_path.parent.glob(ext):
+            img_file.unlink(missing_ok=True)
 
     ProgressReports = exe_path.parent / "ProgressReports"
     latest_pdf: Path | None = max(
