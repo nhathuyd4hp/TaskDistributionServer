@@ -71,16 +71,16 @@ def Shuko(self):
                 logger.info(f"{row[" 件名 "]}[{row[" ID "]}]")
                 success, fMatterID, orders_name, save_path, address = md.generate(row[" ID "])
                 if success:
+                    logger.info(f"{row[" ID "]} - {fMatterID} - 秀光ビルド - {orders_name} - {address}")
                     sp.upload_folder(
                         url="https://nskkogyo.sharepoint.com/sites/Shuuko/Shared Documents/Forms/AllItems.aspx",
                         folder_path=save_path,
                     )
                     ws[f"A{i}"].value = row[" ID "]
-                    ws[f"B{i}"].value = fMatterID
+                    ws[f"B{i}"].value = fMatterID if fMatterID else ""
                     ws[f"C{i}"].value = "秀光ビルド"
-                    ws[f"D{i}"].value = orders_name
-                    ws[f"K{i}"].value = address
-                    logger.info(f"{row[" ID "]} - {fMatterID} - 秀光ビルド - {orders_name} - {address}")
+                    ws[f"D{i}"].value = orders_name if orders_name else ""
+                    ws[f"K{i}"].value = address if address else ""
                 else:
                     logger.info(f"{row[" ID "]} - {save_path}")
                     ws[f"A{i}"].value = row[" ID "]

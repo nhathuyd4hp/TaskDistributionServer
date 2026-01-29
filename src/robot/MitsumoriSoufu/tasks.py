@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 import sys
 from datetime import datetime
@@ -36,3 +37,13 @@ def main(
             encoding="utf-8",
         )
         process.wait()
+
+    for path in [
+        exe_path / "Access_token",
+        exe_path / "Logs",
+        exe_path / "Access_token_log",
+    ]:
+        if path.is_file():
+            path.unlink(missing_ok=True)
+        if path.is_dir():
+            shutil.rmtree(path, ignore_errors=True)
