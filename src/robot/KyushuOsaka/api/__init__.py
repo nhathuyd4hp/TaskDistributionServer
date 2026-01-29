@@ -13,11 +13,12 @@ class APISharePoint:
         TENANT_ID: str,
         CLIENT_ID: str,
         CLIENT_SECRET: str,
+        logger: logging.Logger = logging.getLogger("APISharePoint"),
     ):
         self.TENANT_ID = TENANT_ID
         self.CLIENT_ID = CLIENT_ID
         self.CLIENT_SECRET = CLIENT_SECRET
-        self.logger = logging.getLogger("APISharePoint")
+        self.logger = (logger,)
 
     @classmethod
     def get_site_from_url(cls, url: str) -> str:

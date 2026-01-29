@@ -119,6 +119,7 @@ def kyushu_osaka(
         TENANT_ID=settings.API_SHAREPOINT_TENANT_ID,
         CLIENT_ID=settings.API_SHAREPOINT_CLIENT_ID,
         CLIENT_SECRET=settings.API_SHAREPOINT_CLIENT_SECRET,
+        logger=logger,
     )
     # --- #
     folder_id = None
