@@ -1603,8 +1603,8 @@ try:
 except Exception as e:
     logging.info(f"Error in Excel allignment, error is:\n{e}")
 
-try:
-    export_to_pdf(Write_data, pdf_file_path)
-    time.sleep(2)
-except Exception as e:
-    logging.info(f"Error in export_to_pdf, error is:\n{e}")
+# try:
+#     export_to_pdf(Write_data, pdf_file_path)
+#     time.sleep(2)
+# except Exception as e:
+#     logging.info(f"Error in export_to_pdf, error is:\n{e}")

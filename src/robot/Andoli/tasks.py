@@ -1,3 +1,4 @@
+import contextlib
 import io
 import os
 import subprocess
@@ -57,5 +58,9 @@ def main(
         file_path=str(new_path),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
+    with contextlib.suppress(Exception):
+        new_path.unlink(missing_ok=True)
+        Andoli_bot_log = exe_path.parent / "Andoli_bot_log.log"
+        Andoli_bot_log.unlink(missing_ok=True)
 
     return f"{settings.RESULT_BUCKET}/{result.object_name}"
