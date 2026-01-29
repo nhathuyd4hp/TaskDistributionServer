@@ -430,19 +430,21 @@ def shiga_toyo_chiba(
                             if os.path.isfile(file_path):
                                 logger.info(f"File: {os.path.basename(file_path)}")
                         try:
-                            with FileLock(os.path.join("src/resource", "macro.lock"), timeout=300):
+                            with FileLock(os.path.join("src/resource", "macro.lock"), timeout=60):
                                 app = xw.App(visible=False)
-                                macro_file = "src/resource/マクロチェック (20260114-hisano).xlsm"
-                                wb_macro = app.books.open(macro_file)
-                                threading.Thread(
-                                    target=Fname, args=(os.path.abspath(os.path.join(download_path, "excel")),)
-                                ).start()
-                                wb_macro.macro("Fname")()
-                                # Fopen
-                                wb_macro.macro("Fopen")()
-                                wb_macro.save()
-                                wb_macro.close()
-                                app.quit()
+                                try:
+                                    macro_file = "src/resource/マクロチェック (20260114-hisano).xlsm"
+                                    wb_macro = app.books.open(macro_file)
+                                    threading.Thread(
+                                        target=Fname, args=(os.path.abspath(os.path.join(download_path, "excel")),)
+                                    ).start()
+                                    wb_macro.macro("Fname")()
+                                    # Fopen
+                                    wb_macro.macro("Fopen")()
+                                    wb_macro.save()
+                                    wb_macro.close()
+                                finally:
+                                    app.quit()
                         except Exception:
                             logger.warning("Lỗi: Chạy macro lỗi")
                             APIClient.write(

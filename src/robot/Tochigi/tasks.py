@@ -394,9 +394,9 @@ def tochigi(self, process_date: datetime | str):
                         for file_path in excel_files:
                             if os.path.isfile(file_path):
                                 logger.info(f"File: {os.path.basename(file_path)}")
-                        with FileLock(os.path.join("src/resource", "macro.lock"), timeout=300):
+                        with FileLock(os.path.join("src/resource", "macro.lock"), timeout=60):
+                            app = xw.App(visible=False)
                             try:
-                                app = xw.App(visible=False)
                                 wb_macro = app.books.open(macro_file)
                                 # Fname
                                 for win in Desktop(backend="win32").windows():
