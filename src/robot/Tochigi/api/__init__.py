@@ -13,11 +13,12 @@ class APISharePoint:
         TENANT_ID: str,
         CLIENT_ID: str,
         CLIENT_SECRET: str,
+        logger: logging.Logger,
     ):
         self.TENANT_ID = TENANT_ID
         self.CLIENT_ID = CLIENT_ID
         self.CLIENT_SECRET = CLIENT_SECRET
-        self.logger = logging.getLogger("APISharePoint")
+        self.logger = (logger,)
 
     @classmethod
     def get_site_from_url(cls, url: str) -> str:
@@ -185,7 +186,8 @@ class APISharePoint:
                             f.write(chunk)
             self.logger.info(f"Save to: {save_to}")
             return True
-        except Exception:
+        except Exception as e:
+            self.logger.error(e)
             return False
 
     def download_drive(

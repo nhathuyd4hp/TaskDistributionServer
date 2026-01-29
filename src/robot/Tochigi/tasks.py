@@ -193,6 +193,7 @@ def tochigi(self, process_date: datetime | str):
                 TENANT_ID=settings.API_SHAREPOINT_TENANT_ID,
                 CLIENT_ID=settings.API_SHAREPOINT_CLIENT_ID,
                 CLIENT_SECRET=settings.API_SHAREPOINT_CLIENT_SECRET,
+                logger=logger,
             )
             UP = api.get_site("UP")
             DataTochigi_ItemID = None
@@ -246,11 +247,14 @@ def tochigi(self, process_date: datetime | str):
             while True:
                 if checker.get(TaskID) is not None:
                     raise UserCancelledError()
-                api.download_item(
+                if not api.download_item(
                     site_id=UP.get("id"),
                     breadcrumb=f"データUP一覧/{os.path.basename(DataTochigi)}",
                     save_to=os.path.abspath(DataTochigi),
-                )
+                ):
+                    break
+                if not os.path.isfile(os.path.abspath(DataTochigi)):
+                    raise FileNotFoundError(os.path.abspath(DataTochigi))
                 data = pd.read_excel(os.path.abspath(DataTochigi))
                 if data["R_Status"].notna().all():
                     break
