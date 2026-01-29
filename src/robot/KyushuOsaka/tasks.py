@@ -83,7 +83,6 @@ def kyushu_osaka(
     if checker.get(TaskID) is not None:
         raise UserCancelledError()
     logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
-    logger.info(f"Upload Kyushu-Osaka: {process_date}")
     # Xử lí đầu vào
     if isinstance(process_date, str):
         process_date = datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").date()
@@ -114,6 +113,7 @@ def kyushu_osaka(
         factory.append("九州")
     if osaka:
         factory.append("大阪")
+    logger.info(f"Upload {factory}: {process_date}")
     # -------------
     api = APISharePoint(
         TENANT_ID=settings.API_SHAREPOINT_TENANT_ID,
