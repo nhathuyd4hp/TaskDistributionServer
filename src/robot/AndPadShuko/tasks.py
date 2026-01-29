@@ -88,6 +88,7 @@ def main(self: Task):
                         案件名_物件名 = (
                             案件名_物件名.replace("新築工事", "").replace("【ANDPAD】", "").replace("Fw:", "").strip()
                         )
+                        logger.info(f"Search: {案件名_物件名}")
                         data = wa.download_data(案件名_物件名)
                         if data.shape[0] != 1:
                             logger.warning("Không tim thấy ở WebAccess")
